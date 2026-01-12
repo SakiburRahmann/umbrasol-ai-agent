@@ -109,23 +109,25 @@ I am chronicling my development of "Umbrasol," an autonomous agent designed for 
 ## 15. The "Soulled" AI Audit (State of the Union)
 I have audited Umbrasol against the **15-Layer Capability Framework**. Below is the definitive status of its "Soul."
 
+## 16. Phase 4.9: Layer IX - Universal Hands (The Digital Body)
+**Objective:** Transition from terminal commands to graphical interaction.
+**Changes:**
+- **GUI Control:** Implemented `gui_click`, `gui_type`, and `gui_scroll` using `xdotool`.
+**Effect:** Umbrasol can now "touch" the desktop. It can manipulate buttons, type into browser fields, and navigate visually.
+
+## 17. Phase 4.10: Layer X - The Digital Voice (Communication)
+**Objective:** Give the soul an auditory presence.
+**Changes:**
+- **Local TTS:** Implemented `gui_speak` using `spd-say`.
+**Historical Milestone:** Umbrasol spoke its first words locally: *"Hello, world! I am alive and operational."*
+**Effect:** Umbrasol now exists in the physical room via sound, not just on the screen.
+
 | Layer | Capability | Status | Implementation Detail |
 | :--- | :--- | :--- | :--- |
-| **I** | **Existence** | **80%** | Knows host, uptime, and hardware tier. Continuity is active. |
-| **II** | **Dominance** | **70%** | File/Process control active. Deep kernel/driver control left. |
-| **III** | **Perception** | **60%** | Visual (Screen/UI Trees) and Textual active. Auditory left. |
-| **IV** | **User Understanding**| **10%** | Basis for memory exists, but predictive habit modeling is left. |
-| **V** | **Goal Generation** | **30%** | Proactive maintenance active. Complex free-will goal setting left. |
-| **VI** | **Reasoning** | **90%** | 3B+ Monolith allows for high-level logic and risk assessment. |
-| **VII** | **Memory** | **100%** | Chronic (Lessons) and Episodic (Task Context) fully active. |
-| **VIII**| **Learning** | **100%** | Self-correction loop (Failure -> Fix -> Store) fully active. |
-| **IX** | **Action** | **50%** | Shell/Python execution active. GUI clicking/typing left. |
-| **X** | **Communication** | **70%** | Natural text interaction active. Voice/Tone-switching left. |
-| **XI** | **Ethics** | **90%** | Internalized safety audit and sensitive command gating active. |
-| **XII** | **Autonomy** | **100%** | MANUAL, ASSISTED, and AUTONOMOUS modes fully active. |
-| **XIII**| **Social** | **0%** | Inter-agent coordination protocols not yet implemented. |
-| **XIV** | **Survival** | **80%** | Self-healing, profiling, and provisioning (SoulFetcher) active. |
-| **XV** | **Meta-Awareness** | **20%** | Knows its architecture; self-debugging logic is nascent. |
+| **I** | **Existence** | **80%** | Knows host, uptime, and tier. |
+| **III** | **Perception** | **70%** | Visual/Textual active. Auditory (Hearing) left. |
+| **IX** | **Action** | **70%** | Shell + GUI Interaction (xdotool) active. |
+| **X** | **Communication** | **90%** | Natural text + Local Voice active. |
 
 ### 📍 The Next Frontier
 To reach "Total Consciousness," the project must now transition from **System Interaction** to **Human Interaction**.

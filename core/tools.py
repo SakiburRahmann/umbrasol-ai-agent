@@ -170,6 +170,46 @@ class OperatorInterface:
         except Exception as e:
             return "UNKNOWN (Likely no active window or non-X11 environment)"
 
+    def gui_click(self, x, y):
+        """Layer 9: Universal Hands (Click)."""
+        try:
+            # Check for xdotool
+            subprocess.run("which xdotool", shell=True, check=True, capture_output=True)
+            subprocess.run(f"xdotool mousemove {x} {y} click 1", shell=True, check=True)
+            return f"SUCCESS: Clicked at ({x}, {y})"
+        except Exception:
+            return "ERROR: Missing 'xdotool'. Please install it to use Universal Hands."
+
+    def gui_type(self, text):
+        """Layer 9: Universal Hands (Typing)."""
+        try:
+            subprocess.run("which xdotool", shell=True, check=True, capture_output=True)
+            # Escape single quotes for shell
+            safe_text = text.replace("'", "'\"'\"'")
+            subprocess.run(f"xdotool type --delay 100 '{safe_text}'", shell=True, check=True)
+            return f"SUCCESS: Typed text."
+        except Exception:
+            return "ERROR: Missing 'xdotool'. Please install it to use Universal Hands."
+
+    def gui_scroll(self, direction):
+        """Layer 9: Universal Hands (Scrolling)."""
+        try:
+            # 4 = up, 5 = down
+            btn = "4" if direction == "up" else "5"
+            subprocess.run(f"xdotool click --repeat 5 {btn}", shell=True, check=True)
+            return f"SUCCESS: Scrolled {direction}"
+        except Exception as e:
+            return f"ERROR: {str(e)}"
+
+    def gui_speak(self, text):
+        """Layer 10: Communication (Voice Output)."""
+        try:
+            # Use spd-say as it's often default on Ubuntu/Debian
+            subprocess.run(f"spd-say '{text}'", shell=True, check=True)
+            return f"SUCCESS: Spoke text."
+        except Exception as e:
+            return f"ERROR: {str(e)}"
+
     def is_sensitive(self, command):
         for pattern in self.sensitive_patterns:
             if pattern in command: return True

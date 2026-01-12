@@ -123,6 +123,8 @@ class Nexus:
         try:
             result = "ERROR: No action"
             if tool == "shell": result = self.hands.execute_shell(action)
+            elif tool == "ls": result = self.hands.list_dir(action)
+            elif tool == "python": result = self.hands.execute_shell(f"python3 -c '{action}'")
             elif tool == "stats": result = self.hands.get_system_stats()
             elif tool == "existence": result = self.hands.get_existence_stats()
             elif tool == "physical": result = self.hands.get_physical_state()
@@ -135,6 +137,13 @@ class Nexus:
             elif tool == "proc_list": result = self.hands.get_process_list()
             elif tool == "kill": result = self.hands.kill_process(int(action))
             elif tool == "net": result = self.hands.get_network_stats()
+            elif tool == "gui_click": 
+                coords = action.split()
+                if len(coords) >= 2: result = self.hands.gui_click(coords[0], coords[1])
+                else: result = "ERROR: Coordinates missing for click"
+            elif tool == "gui_type": result = self.hands.gui_type(action)
+            elif tool == "gui_scroll": result = self.hands.gui_scroll(action)
+            elif tool == "gui_speak": result = self.hands.gui_speak(action)
             # ... other tools
             
             error = None

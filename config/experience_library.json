@@ -40,5 +40,17 @@
         "action": "whoami",
         "error": null,
         "success": true
+    },
+    "say hello to the world and tell me you are alive": {
+        "tool": "gui_speak",
+        "action": "Hello, world! I am alive and operational.",
+        "error": null,
+        "success": true
+    },
+    "click at coordinates 10 10": {
+        "tool": "shell",
+        "action": "xdotool mousemove 10 10 click 1",
+        "error": "/bin/sh: 1: xdotool: not found\n",
+        "success": false
     }
 }

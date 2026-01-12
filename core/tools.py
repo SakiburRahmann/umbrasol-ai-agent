@@ -188,9 +188,22 @@ class OperatorInterface:
         """Layer 10: Communication (Voice Output). Neural Piper or robotic spd-say."""
         if not text or not text.strip(): return "ERROR: Empty text."
         
-        # Clean text for speech
-        safe_text = text.replace("'", "").replace('"', "").strip()
-        self.logger.info(f"Speaking: {safe_text}")
+        # CLEANER: Strip Markdown and Robotic artifacts
+        import re
+        clean = text.strip()
+        # Remove markdown symbols (**, #, _, *, `)
+        clean = re.sub(r'[*_#`]', '', clean)
+        # Remove common chat labels
+        clean = re.sub(r'^(AI|Human|System|TALK|ACTION):\s*', '', clean, flags=re.IGNORECASE)
+        # Remove list markers at start of line (1., 2., -)
+        clean = re.sub(r'^\s*(\d+\.|-|[a-z]\))\s*', '', clean, flags=re.MULTILINE)
+        # Normalize whitespace
+        clean = re.sub(r'\s+', ' ', clean).strip()
+        
+        if not clean: return "ERROR: No speakable content after cleaning."
+        
+        self.logger.info(f"Speaking: {clean}")
+        safe_text = clean.replace("'", "").replace('"', "")
 
         # Try Neural Piper first
         try:

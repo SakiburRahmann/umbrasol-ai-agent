@@ -70,7 +70,9 @@ class MonolithSoul:
             f"User: {user_request}\n\n"
             "DIRECTIVE:\n"
             "1. If the user wants an action (stats, battery, files, window), prefix with 'ACTION: tool,cmd'.\n"
-            "2. For ALL other conversation, questions, or analysis, speak naturally. Prefix with 'TALK: '."
+            "2. For ALL other conversation, speak naturally in full paragraphs. Prefix with 'TALK: '.\n"
+            "CRITICAL: DO NOT use markdown symbols (**, #, _, *). DO NOT use numbered or bulleted lists. "
+            "DO NOT say 'AI:' or 'Human:'. Speak as a human would in a natural, flowing conversation."
         )
         
         full_response = ""

@@ -117,10 +117,24 @@ class UmbrasolCore:
         except Exception as e:
             return f"ERROR: {str(e)}"
 
+    def listen_loop(self):
+        """Continuously listen for voice commands."""
+        from ear import Ear
+        ear = Ear()
+        if not ear.model: return
+
+        print("[VOICE] Listening for commands... (Say 'check battery')")
+        for command in ear.listen():
+            print(f"\n[VOICE] Heard: '{command}'")
+            if command:
+                self.execute(command)
+
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python core/umbrasol.py 'your command'")
-        sys.exit(1)
-    
     agent = UmbrasolCore()
-    agent.execute(sys.argv[1])
+    
+    if len(sys.argv) > 1 and sys.argv[1] == "--voice":
+        agent.listen_loop()
+    elif len(sys.argv) > 1:
+        agent.execute(sys.argv[1])
+    else:
+        print("Usage: python core/umbrasol.py 'command' OR --voice")

@@ -185,6 +185,7 @@ class OperatorInterface:
     def gui_speak(self, text):
         """Layer 10: Communication (Voice Output)."""
         try:
+            self.logger.info(f"Speaking: {text}")
             subprocess.run(f"spd-say '{text}'", shell=True, check=True)
             return f"SUCCESS: Spoke text."
         except Exception as e:

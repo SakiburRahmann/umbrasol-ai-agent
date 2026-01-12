@@ -141,12 +141,20 @@ Umbrasol is not just a shell executor. It has a "Universal Hand" with specialize
 
 ---
 
-## 10. Guidelines for the "Next Agent"
-1.  **NEVER** suggest moving to the cloud. The project's "Soul" is its locality.
-2.  **NEVER** bypass the Guardian brain.
-3.  **ALWAYS** prioritize "Ghost Mode" (Terminal/Intent) over "UI Mode" (Clicking).
-4.  **HARD REQUIREMENT:** All code must be runnable offline after the initial model pull.
-
 ---
-*Signed,*
-*The Initial Architect (Antigravity)*
+
+## 11. The Switchblade Strategy (Speed vs. Surgery)
+To solve the bottleneck of slow local models, Umbrasol uses a "Switchblade" execution model:
+
+1.  **Direct Mode (Fast):** For tasks like `ls`, `mkdir`, `cat`. 
+    - No Internet Search.
+    - No Guardian Brain.
+    - Single-Step JSON output.
+    - Result in <10 seconds.
+
+2.  **Surgical Mode (Autonomous):** For tasks like `Refactor this project` or `rm deep-folder`.
+    - Triggers the "Memento" recursive loop.
+    - Uses Swift-Search and Dual-Soul verification.
+    - Result in minutes (High Reliability).
+
+3.  **Heuristic Trigger:** A Python-level filter scans the "Doer" output. If the command contains `rm`, `sudo`, `mv`, or `chmod`, it automatically forces a re-evaluation by the **Guardian Brain**.

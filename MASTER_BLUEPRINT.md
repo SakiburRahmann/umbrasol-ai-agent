@@ -8,14 +8,15 @@ It is designed to be **Zero-Cost** (no APIs), **Zero-Latency** (local inference)
 
 ---
 
-### 3. Core Architecture: Mono-Soul Intelligence
-Project Umbrasol utilizes a **Mono-Soul** architecture. While it performs internal triaging (Routing vs. Doing), it utilizes a **single high-quality model** for all stages of thought.
-- **Why:** Local deployment environments suffer from context-switching stalls when loading multiple models. A single "warm" model is 30% faster and significantly more reliable than split-model triaging.
-- **Speculative Execution:** Even within a single model, we still use a "Fast Literal" path for 0ms command execution.
-- **Role:** The Architect and Executor.
-- **Job:** Handles both task planning and internal safety auditing.
-
-- **Job:** Routes requests to Cache, Heuristics, or the Monolith.
+### 3. Core Architecture: The Unified Core (Project Chimera) 🦁
+Project Umbrasol v7.0 is built on a **Unified Core Architecture** (`core/umbrasol.py`).
+- **Concept:** A single Monolith that combines **Instant Heuristics** (0.001s), **Habitual Memory**, **Semantic Caching**, and **Safe AI** into one execution loop.
+- **Layers of Thought:**
+    - **Layer 0 (Sense):** Detects Active Window, Time, and Voice Input.
+    - **Layer 1 (Reflex):** Checks Cache and Heuristics for instant 0ms execution.
+    - **Layer 2 (Habit):** Predicts user needs based on patterns.
+    - **Layer 3 (Reason):** Engages `Brain_v2` (Safe AI) only for novel, complex tasks.
+    - **Layer 8 (Auto-Fix):** Self-corrects execution failures without human intervention.
 
 ---
 

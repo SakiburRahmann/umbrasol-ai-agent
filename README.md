@@ -66,4 +66,4 @@ The system is built on the **Unified Core** (`core/umbrasol.py`), a single monol
 *   **Transparent:** All actions are logged to the console.
 
 ---
-*Created by the Umbrasol Team (Antigravity). January 2026.*
+*Created by Sakibur Rahman. January 2026.*

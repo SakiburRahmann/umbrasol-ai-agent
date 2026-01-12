@@ -1,12 +1,15 @@
 import requests
 import json
-import re
 try:
     from core.profiler import HardwareProfiler
     from core.experience import ExperienceManager
+    from config import settings
 except ImportError:
     from profiler import HardwareProfiler
     from experience import ExperienceManager
+    class settings: 
+        SAFE_TOOLS = {"physical", "existence", "stats", "see_active", "ls"}
+        SENSITIVE_PATTERNS = ["rm ", "sudo", "dd "]
 
 class Brain:
     def __init__(self, model_name="qwen2.5:3b", base_url="http://localhost:11434"):
@@ -23,7 +26,7 @@ class Brain:
                 "temperature": temperature,
                 "num_predict": max_tokens,
                 "num_thread": 4,
-                "num_ctx": 512  # Tiny context for speed
+                "num_ctx": 512
             }
         }
         
@@ -39,15 +42,9 @@ class MonolithSoul:
         profiler = HardwareProfiler()
         tier = profiler.get_tier()
         self.model_name = tier['soul']
-        self.router_model = self.model_name
         self.monolith = Brain(model_name=self.model_name)
         self.memory = ExperienceManager()
-        
-        # SAFETY WHITELIST: Only these tools can be executed
-        self.safe_tools = {
-            "physical", "existence", "stats", "see_active", "see_tree", 
-            "see_raw", "proc_list", "net", "gui_speak", "ls"
-        }
+        self.safe_tools = settings.SAFE_TOOLS
 
     def execute_task(self, user_request, context=""):
         """Minimal AI call with strict safety and Context."""
@@ -64,7 +61,7 @@ class MonolithSoul:
             f"XP: {xp_context}\n"
             f"Task: {user_request}\n"
             "Output ONLY: tool,cmd\n"
-            "Tools: physical,existence,stats,see_active,ls,gui_speak\n"
+            f"Tools: {','.join(self.safe_tools)}\n"
             "Example: stats,"
         )
         
@@ -75,14 +72,13 @@ class MonolithSoul:
         tool = parts[0].strip() if len(parts) > 0 else "stats"
         cmd = parts[1].strip() if len(parts) > 1 else ""
         
-        # SAFETY CHECK: Only allow whitelisted tools
+        # SAFETY CHECK: Only allow whitelisted tools (Centralized)
         if tool not in self.safe_tools:
-            tool = "stats"  # Default to safe
+            tool = "stats"
             cmd = ""
         
-        # SAFETY CHECK: Block dangerous commands
-        dangerous_patterns = ["rm ", "sudo", "dd ", "mkfs", ">", "chmod", "chown"]
-        if any(p in cmd.lower() for p in dangerous_patterns):
+        # SAFETY CHECK: Block dangerous commands (Centralized)
+        if any(p in cmd.lower() for p in settings.SENSITIVE_PATTERNS):
             cmd = ""
         
         return {

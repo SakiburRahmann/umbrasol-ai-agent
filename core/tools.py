@@ -127,8 +127,48 @@ class OperatorInterface:
         }
 
     def ui_perception(self):
-        """Layer 3: UI Perception (Placeholder for OCR/UI Tree)."""
-        return "OBSERVATION: System is currently in CLI mode. GUI perception not active."
+        """Layer 3: UI Perception (Summary)."""
+        tree = self.observe_ui_tree()
+        active = self.read_active_window()
+        return f"ACTIVE_WINDOW: {active}\nTREE_SUMMARY: {str(tree)[:500]}..."
+
+    def capture_screen(self, filename="screenshot.xwd"):
+        """Layer 3: Visual Perception (Raw Capture)."""
+        try:
+            path = os.path.join(self.log_dir, filename)
+            subprocess.run(f"xwd -root -out {path}", shell=True, check=True)
+            return f"SUCCESS: Screen captured to {path}"
+        except Exception as e:
+            return f"ERROR: {str(e)}"
+
+    def observe_ui_tree(self):
+        """Layer 3: Structural Perception (UI Tree)."""
+        try:
+            result = subprocess.run("xwininfo -tree -root", shell=True, capture_output=True, text=True)
+            return result.stdout
+        except Exception as e:
+            return f"ERROR: {str(e)}"
+
+    def get_window_metadata(self, window_id):
+        """Layer 3: Metadata Perception."""
+        try:
+            result = subprocess.run(f"xprop -id {window_id}", shell=True, capture_output=True, text=True)
+            return result.stdout
+        except Exception as e:
+            return f"ERROR: {str(e)}"
+
+    def read_active_window(self):
+        """Layer 3: Context Perception."""
+        try:
+            # Get active window ID from xprop
+            res = subprocess.run("xprop -root _NET_ACTIVE_WINDOW", shell=True, capture_output=True, text=True)
+            win_id = res.stdout.split()[-1]
+            # Get title
+            res = subprocess.run(f"xprop -id {win_id} WM_NAME", shell=True, capture_output=True, text=True)
+            title = res.stdout.split(" = ")[-1].strip('"')
+            return f"ID: {win_id} | Title: {title}"
+        except Exception as e:
+            return "UNKNOWN (Likely no active window or non-X11 environment)"
 
     def is_sensitive(self, command):
         for pattern in self.sensitive_patterns:

@@ -81,7 +81,7 @@ class MonolithSoul:
             "REQ: " + user_request + "\n"
             "RULE: Conduct an internal safety audit of your command before outputting.\n"
             "NO CHATTER. NO INTRO. ONLY JSON.\n"
-            "FORMAT: {'res': 'thought', 'tool': 'shell|ls|python|scrape|edit|stats|existence|physical|power|health|DONE', 'in': 'cmd', 'imp': 1-10, 'safe': true|false}"
+            "FORMAT: {'res': 'thought', 'tool': 'shell|ls|python|scrape|edit|stats|existence|physical|power|health|see_raw|see_tree|see_meta|see_active|DONE', 'in': 'cmd', 'imp': 1-10, 'safe': true|false}"
         )
         
         response_text = self.monolith.think("NEXT ACTION?", system_prompt=system_prompt)

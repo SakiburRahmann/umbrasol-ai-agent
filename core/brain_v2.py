@@ -47,9 +47,17 @@ class MonolithSoul:
 
     def execute_task(self, user_request, context=""):
         """Minimal AI call with strict safety and Context."""
+        
+        # Layer 7: Chronic Memory Retrieval
+        lesson = self.memory.get_relevant_lesson(user_request)
+        xp_context = ""
+        if lesson and not lesson.get('success', True):
+             xp_context = f"WARNING: Previous attempt failed with '{lesson.get('error')}'. Avoid that."
+
         # Ultra-compressed prompt
         prompt = (
             f"Context: {context}\n"
+            f"XP: {xp_context}\n"
             f"Task: {user_request}\n"
             "Output ONLY: tool,cmd\n"
             "Tools: physical,existence,stats,see_active,ls,gui_speak\n"

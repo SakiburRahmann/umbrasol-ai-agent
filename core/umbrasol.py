@@ -83,15 +83,48 @@ class UmbrasolCore:
             return
 
         success = True
+        
+        # Execute Actions with Self-Correction (Layer 8)
         for action in actions:
             tool = action.get("tool", "stats")
             cmd = action.get("cmd", "")
             
-            result = self._safe_dispatch(tool, cmd)
-            print(f"[Result]: {str(result)[:200]}")
+            # Layer 8: Self-Correction Loop
+            max_retries = 2
+            action_success = False
             
-            if "ERROR" in str(result):
+            for attempt in range(max_retries + 1):
+                result = self._safe_dispatch(tool, cmd)
+                print(f"[Result]: {str(result)[:200]}")
+                
+                if "ERROR" not in str(result) and "BLOCKED" not in str(result):
+                    action_success = True
+                    break
+                
+                # If we failed, reflect and retry
+                if attempt < max_retries:
+                    print(f"[AUTO-FIX] Action {tool}({cmd}) failed. Reflexion initiated...")
+                    error_context = f"Previous action {tool}({cmd}) failed: {result}. Suggest a fix."
+                    
+                    # Ask Brain for a new plan given the error
+                    # We pass the error context to the brain
+                    retry_thought = self.soul.execute_task(user_request, context=context_str + "\n" + error_context)
+                    retry_actions = retry_thought.get("actions", [])
+                    
+                    if retry_actions:
+                        # Update current action to the new fix
+                        new_action = retry_actions[0]
+                        tool = new_action.get("tool", tool)
+                        cmd = new_action.get("cmd", cmd)
+                        print(f"[AUTO-FIX] Retrying with: {tool}({cmd})")
+                    else:
+                        print("[AUTO-FIX] Brain could not suggest a fix.")
+                        break
+            
+            if not action_success:
                 success = False
+                print(f"[FAILURE] Could not complete task after {max_retries+1} attempts.")
+                self.habit.learn(active_window, f"FAILURE:{user_request}")
         
         # LAYER 4: LEARNING
         if success and len(actions) == 1:

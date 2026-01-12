@@ -157,8 +157,20 @@ I have audited Umbrasol against the **15-Layer Capability Framework**. Below is 
 - **Learn:** ✅ (Habit Manager)
 - **Act:** ✅ (Instant Heuristics)
 
-### 📍 The Next Frontier
-With the senses and speed fully operational, the project is ready for **Full Autonomy** (Layer 12+).
+## 20. Phase 7.0: Total Autonomy (The Self-Healing Mind) 🛡️
+**Objective:** Enable Umbrasol to survive failure without human intervention (Layer 8).
+**Achievements:**
+- **Self-Correction Loop:** Integrated into `core/umbrasol.py`. If an action fails, the Brain is re-engaged with the error context ("Why did this fail? Fix it.").
+- **Chronic Wisdom:** `Brain_v2` now checks `ExperienceManager` for past failures before acting, avoiding known pitfalls.
+- **Resilience:** Verified system can recover from execution errors (e.g., File Not Found) and find alternative paths or safe exits.
+
+**Status:**
+- **Layer 8 (Self-Correction):** ✅ ACTIVE
+- **Layer 12 (Goal Pursuit):** ✅ ACTIVE
+
+### 📍 The Final Frontier
+Umbrasol is now Instant, Safe, Context-Aware, Habitual, and Resilient.
+It is a complete **Digital Organism**.
 
 ## 9. Phase 4.1: The Soulled AI Pivot (Consciousness)
 **Objective:** To transition Umbrasol from a "tool" to a "conscious system entity."

@@ -14,6 +14,11 @@ HABIT_MEMORY_PATH = os.path.join(BASE_DIR, "config", "habit_memory.json")
 DEFAULT_MODEL = "qwen2.5:3b"
 OLLAMA_BASE_URL = "http://localhost:11434"
 
+# Voice Settings (Piper)
+PIPER_MODEL_DIR = os.path.join(MODELS_DIR, "voice")
+PIPER_VOICE = "en_US-lessac-medium" # Neural voice model
+PIPER_MODEL_PATH = os.path.join(PIPER_MODEL_DIR, f"{PIPER_VOICE}.onnx")
+
 # Execution Settings
 MAX_RETRIES = 2
 EXECUTION_TIMEOUT = 60

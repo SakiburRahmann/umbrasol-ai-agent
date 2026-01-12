@@ -1,6 +1,8 @@
 import subprocess
 import os
 import sys
+import shutil
+import psutil
 import requests
 import logging
 try:
@@ -183,14 +185,45 @@ class OperatorInterface:
             return f"ERROR: {str(e)}"
 
     def gui_speak(self, text):
-        """Layer 10: Communication (Voice Output)."""
+        """Layer 10: Communication (Voice Output). Neural Piper or robotic spd-say."""
         if not text or not text.strip(): return "ERROR: Empty text."
+        
+        # Clean text for speech
+        safe_text = text.replace("'", "").replace('"', "").strip()
+        self.logger.info(f"Speaking: {safe_text}")
+
+        # Try Neural Piper first
         try:
-            # Clean text for speech (Remove single/double quotes to avoid synthesis hiccups)
-            safe_text = text.replace("'", "").replace('"', "").strip()
-            self.logger.info(f"Speaking: {safe_text}")
-            # Use list-mode subprocess to avoid shell-escaping issues
-            subprocess.run(["spd-say", safe_text], check=True)
-            return f"SUCCESS: Spoke text."
+            model_path = settings.PIPER_MODEL_PATH
+            if os.path.exists(model_path):
+                import wave
+                # We use the piper command line for simplicity and performance
+                # Pipe text to piper, then pipe output to aplay
+                temp_wav = os.path.join(self.log_dir, "speech.wav")
+                piper_cmd = [
+                    "piper",
+                    "--model", model_path,
+                    "--output_file", temp_wav
+                ]
+                
+                # Generate audio
+                subprocess.run(piper_cmd, input=safe_text, text=True, check=True, capture_output=True)
+                
+                # Play audio
+                # Try paplay (PulseAudio) then aplay (ALSA)
+                play_cmd = "paplay" if shutil.which("paplay") else "aplay"
+                subprocess.run([play_cmd, temp_wav], check=True)
+                
+                # Cleanup
+                if os.path.exists(temp_wav): os.remove(temp_wav)
+                return "SUCCESS: neural speech"
         except Exception as e:
+            self.logger.warning(f"Piper failed, falling back: {e}")
+
+        # Fallback to robotic spd-say
+        try:
+            subprocess.run(["spd-say", safe_text], check=True)
+            return "SUCCESS: robotic fallback"
+        except Exception as e:
+            self.logger.error(f"Speak Error: {e}")
             return f"ERROR: {str(e)}"

@@ -83,26 +83,54 @@ class UmbrasolCore:
                 if self.voice_mode: self.speak_result(result)
                 return
 
-        # LAYER 3: MINIMAL AI
-        print(f"[AI] Novel request. Engaging Brain_v2...")
-        self.logger.info("Engaging AI")
-        thought = self.soul.execute_task(user_request, context=context_str)
+        # LAYER 3: REAL-TIME BRAIN (STREAMING)
+        print(f"[AI] Thinking...")
+        self.logger.info("Engaging Streaming AI")
         
-        actions = thought.get("actions", [])
-        message = thought.get("message", "")
+        full_message = ""
+        sentence_buffer = ""
+        actions = []
+        
+        for chunk_data in self.soul.execute_task_stream(user_request, context=context_str):
+            if chunk_data["type"] == "talk":
+                content = chunk_data["content"]
+                full_message += content
+                sentence_buffer += content
+                
+                # If we have a full sentence, speak it instantly
+                if any(p in sentence_buffer for p in [".", "!", "?", "\n"]):
+                    # Extract the sentence
+                    # Simple split for speed, find the first punctuation
+                    import re
+                    sentences = re.split(r'([.!?\n])', sentence_buffer)
+                    if len(sentences) > 2:
+                        # We have at least one complete sentence
+                        to_speak = "".join(sentences[:2]).strip()
+                        if to_speak and self.voice_mode:
+                            print(f"[AI] {to_speak}")
+                            self.hands.gui_speak(to_speak)
+                        # Keep the remainder
+                        sentence_buffer = "".join(sentences[2:])
+            
+            elif chunk_data["type"] == "action":
+                actions.extend(chunk_data.get("actions", []))
 
-        if not actions and message:
-            print(f"[AI] {message}")
-            if self.voice_mode: self.hands.gui_speak(message)
-            return
-        elif not actions:
-            print("[AI] No actions generated.")
+        # Speak any remaining text in buffer
+        if sentence_buffer.strip() and self.voice_mode:
+            print(f"[AI] {sentence_buffer.strip()}")
+            self.hands.gui_speak(sentence_buffer.strip())
+            
+        if not actions and not full_message:
+            print("[AI] No response generated.")
             if self.voice_mode: self.hands.gui_speak("I am unsure how to proceed.")
             return
-
-        success = True
         
-        # Execute with Self-Correction
+        if not actions: return # Conversation path finished
+
+        # EXECUTION PATH FOR ACTIONS
+        success = True
+        last_result = None
+        
         for action in actions:
             tool = action.get("tool", "stats")
             cmd = action.get("cmd", "")
@@ -110,7 +138,6 @@ class UmbrasolCore:
             # Layer 8: Self-Correction Loop
             max_retries = settings.MAX_RETRIES
             action_success = False
-            last_result = None
             
             for attempt in range(max_retries + 1):
                 result = self._safe_dispatch(tool, cmd)

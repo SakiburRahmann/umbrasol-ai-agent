@@ -70,6 +70,10 @@ class Nexus:
         try:
             if tool == "shell": result = self.hands.execute_shell(action)
             elif tool == "stats": result = self.hands.get_system_stats()
+            elif tool == "existence": result = self.hands.get_existence_stats()
+            elif tool == "physical": result = self.hands.get_physical_state()
+            elif tool == "power": result = self.hands.manage_power(action)
+            elif tool == "health": result = self.hands.proactive_maintenance()
             elif tool == "proc_list": result = self.hands.get_process_list()
             elif tool == "kill": result = self.hands.kill_process(int(action))
             elif tool == "net": result = self.hands.get_network_stats()

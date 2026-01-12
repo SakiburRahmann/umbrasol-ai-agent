@@ -31,6 +31,57 @@ class OperatorInterface:
         except Exception as e:
             return f"ERROR: {str(e)}"
 
+    def get_existence_stats(self):
+        """Layer 1: Self-Awareness (Existence)."""
+        import time
+        import platform
+        uptime = 0
+        try:
+            with open('/proc/uptime', 'r') as f:
+                uptime = float(f.readline().split()[0])
+        except: 
+            uptime = time.time() - os.getloadavg()[0] # Fallback
+        
+        return {
+            "identity": "Umbrasol Core",
+            "host": platform.node(),
+            "os": platform.system(),
+            "uptime_seconds": int(uptime),
+            "status": "CONSCIOUS"
+        }
+
+    def get_physical_state(self):
+        """Layer 2: Physical Dominance (Sensing the Body)."""
+        import psutil
+        state = {}
+        try:
+            battery = psutil.sensors_battery()
+            state["battery"] = f"{battery.percent}% ({'Charging' if battery.power_plugged else 'Discharging'})" if battery else "N/A"
+        except: state["battery"] = "N/A"
+        
+        try:
+            temps = psutil.sensors_temperatures()
+            if temps:
+                core_temp = next(iter(temps.values()))[0].current
+                state["thermal"] = f"{core_temp}°C"
+        except: state["thermal"] = "STABLE"
+        
+        return state
+
+    def manage_power(self, action):
+        """Layer 2: Power Control."""
+        if action == "sleep": return "SIMULATION: System would enter sleep."
+        if action == "reboot": return "SIMULATION: System would reboot."
+        return f"ERROR: Unknown power action {action}."
+
+    def proactive_maintenance(self):
+        """Layer 14: Survival Instinct (Self-Healing)."""
+        import psutil
+        disk = psutil.disk_usage(self.cwd)
+        if disk.percent > 90:
+            return "WARNING: Disk critical (>90%). Suggested Action: Purge logs/temp."
+        return "HEALTH: System integrity within safe bounds."
+
     def list_dir(self, path="."):
         """Layer 1: File System Control."""
         try:

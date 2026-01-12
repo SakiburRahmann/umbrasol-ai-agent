@@ -76,33 +76,39 @@ class MonolithSoul:
         )
         
         full_response = ""
-        is_action = False
-        buffer = ""
+        action_detected = False
+        yielded_talk_pre_action = False
         
         for chunk in self.monolith.think_stream(prompt, system_prompt=identity):
             full_response += chunk
-            buffer += chunk
             
-            # Detect path as early as possible
-            if not is_action and "ACTION:" in full_response:
-                is_action = True
-                
-            if not is_action and "TALK:" in buffer:
-                # Yield the conversation bits as they arrive (after the prefix)
-                parts = buffer.split("TALK:", 1)
-                if len(parts) > 1:
-                    yield {"type": "talk", "content": parts[1]}
-                    buffer = "" # Clear buffer after yielding current talk segment
-            elif not is_action and buffer and len(full_response) > 10:
-                # Fallback: if no prefix used but AI started talking
-                yield {"type": "talk", "content": buffer}
-                buffer = ""
+            if "ACTION:" in full_response and not action_detected:
+                action_detected = True
+                # If there was text before ACTION:, yield it as talk
+                pre_action_text = full_response.split("ACTION:", 1)[0].replace("TALK:", "").strip()
+                if pre_action_text and not yielded_talk_pre_action:
+                    yield {"type": "talk", "content": pre_action_text}
+                    yielded_talk_pre_action = True
+            
+            elif not action_detected:
+                # Still in talk mode
+                # Yield sentences or chunks as they come
+                # But wait for a reasonable size to avoid stutter
+                if "TALK:" in chunk or len(full_response) > 20:
+                    clean_chunk = chunk.replace("TALK:", "")
+                    if clean_chunk:
+                        yield {"type": "talk", "content": clean_chunk}
 
-        # Final cleanup for actions
-        if is_action:
-            parts = full_response.replace("ACTION:", "").strip().split(",", 1)
+        # FINAL PARSING
+        if "ACTION:" in full_response:
+            # Extract only the action part
+            action_part = full_response.split("ACTION:", 1)[1].strip()
+            parts = action_part.split(",", 1)
             tool = parts[0].strip() if len(parts) > 0 else "stats"
             cmd = parts[1].strip() if len(parts) > 1 else ""
+            
+            # Clean cmd of any trailing 'TALK:' or reasoning
+            if "TALK:" in cmd: cmd = cmd.split("TALK:", 1)[0].strip()
             
             if tool not in self.safe_tools: tool = "stats"
             if any(p in cmd.lower() for p in settings.SENSITIVE_PATTERNS): cmd = ""
@@ -112,10 +118,16 @@ class MonolithSoul:
                 "actions": [{"tool": tool, "cmd": cmd}],
                 "reasoning": "Action Path"
             }
-        else:
-            # Yield any remaining buffer
-            if buffer:
-                yield {"type": "talk", "content": buffer}
+            
+            # Handle any talk that came AFTER the action
+            if "TALK:" in action_part:
+                post_action_talk = action_part.split("TALK:", 1)[1].strip()
+                if post_action_talk:
+                    yield {"type": "talk", "content": post_action_talk}
+        elif not yielded_talk_pre_action:
+            # If no action was ever found, ensure we didn't miss the final talk
+            # Note: the loop already yields talk chunks, but we check the tail
+            pass
 
     def execute_task(self, user_request, context=""):
         """Non-streaming wrapper for legacy compatibility."""

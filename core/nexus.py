@@ -32,41 +32,54 @@ class Nexus:
             return
 
         # 1.5 Hyper-Speed Heuristic (Zero-Inference / Sub-0.1s)
-        fast_maps = {
+        # Bypasses BOTH models for known system intents.
+        req_clean = user_request.lower().strip().replace("?", "")
+        
+        # Keyword-based Fast-Map (More robust than exact matches)
+        fast_triggers = {
+            "battery": ("physical", ""),
+            "power": ("physical", ""),
+            "charge": ("physical", ""),
+            "thermal": ("physical", ""),
+            "temp": ("physical", ""),
+            "uptime": ("existence", ""),
+            "who am i": ("shell", "whoami"),
+            "current dir": ("shell", "pwd"),
+            "ram": ("stats", ""),
+            "memory": ("stats", ""),
+            "cpu": ("stats", ""),
+            "process": ("proc_list", ""),
+            "active window": ("see_active", ""),
+            "what window": ("see_active", ""),
+            "active tab": ("see_active", ""),
             "list files": ("ls", "."),
             "ls": ("ls", "."),
             "show files": ("ls", "."),
-            "system stats": ("stats", ""),
-            "cpu usage": ("stats", ""),
-            "check ram": ("stats", ""),
-            "check battery": ("physical", ""),
-            "check physical": ("physical", ""),
-            "check existence": ("existence", ""),
-            "who am i": ("shell", "whoami"),
-            "current dir": ("shell", "pwd"),
-            "uptime": ("existence", ""),
-            "health": ("health", ""),
-            "show windows": ("see_tree", ""),
-            "active window": ("see_active", "")
+            "network": ("net", ""),
+            "net": ("net", ""),
+            "health": ("health", "")
         }
         
-        req_clean = user_request.lower().strip().replace("?", "")
-        if req_clean in fast_maps:
-            print("[NEXUS_FAST] Hyper-Speed Heuristic Match (0.00s Inference Bypass).")
-            tool, action = fast_maps[req_clean]
-            self._dispatch(tool, action, user_request)
-            print(f"Total Latency: {time.time() - start_time:.2f}s")
-            return
+        for key, (tool, action) in fast_triggers.items():
+            if key in req_clean:
+                print(f"[NEXUS_FAST] Hyper-Speed Heuristic Match: '{key}' (0.00s Bypass).")
+                self._dispatch(tool, action, user_request)
+                print(f"Total Latency: {time.time() - start_time:.2f}s")
+                return
 
-        # 2. Speculative Routing
-        route = self.soul.route_task(user_request)
-        
-        # 3. Execution Phase (With Self-Correction Learning)
-        if "LITERAL" in route:
-            thought = self.soul.fast_literal_engine(user_request)
-            if not thought: thought = self.soul.execute_task(user_request)
-        else:
+        # 2. Execution Phase (Optimized for Mono-Soul)
+        if self.soul.router_model == self.soul.model_name:
+            # Mono-Soul Logic: Skip redundant routing call (Save ~20s)
+            print("[NEXUS] Mono-Soul Active. Directing request to Monolith.")
             thought = self.soul.execute_task(user_request)
+        else:
+            # Multi-Soul Logic: Triage with 135M first
+            route = self.soul.route_task(user_request)
+            if "LITERAL" in route:
+                thought = self.soul.fast_literal_engine(user_request)
+                if not thought: thought = self.soul.execute_task(user_request)
+            else:
+                thought = self.soul.execute_task(user_request)
 
         for attempt in range(2): # Allow 1 automatic correction attempt
             tool = thought.get("tool", "shell")

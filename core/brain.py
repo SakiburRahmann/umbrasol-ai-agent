@@ -43,22 +43,21 @@ class Brain:
 # The Unified-Soul implementation (Monolith-Prime)
 class MonolithSoul:
     def __init__(self, model_name=None):
-        # Auto-detect hardware tier
+        # 1. Hardware Profiling (Always Persistent)
         profiler = HardwareProfiler()
         tier = profiler.get_tier()
         
         if not model_name:
-            print(f"[Profiler] System Tier Detected: {tier['name']}")
+            print(f"[Profiler] System Tier: {tier['name']}")
             self.model_name = tier['doer']
         else:
             self.model_name = model_name
             
-        # --- Efficiency Pivot: Mono-Soul for Low Resources ---
-        if tier['name'] == "Ghost":
-            print("[Profiler] GHOST MODE: Consolidating Intelligence. Running Mono-Soul (3B Only).")
-            self.router_model = self.model_name # Use 3B for everything
-        else:
-            self.router_model = "smollm:135m" 
+        # --- THE MONO-SOUL REVOLUTION (Architecture Standardization) ---
+        # User observed (correctly) that loading two models creates overhead.
+        # We now use the same high-quality 'Doer' model for Routing as well.
+        # This keeps the brain 'warm' in memory and eliminates context switching.
+        self.router_model = self.model_name 
             
         self.monolith = Brain(model_name=self.model_name)
         self.router = Brain(model_name=self.router_model)
@@ -93,50 +92,62 @@ class MonolithSoul:
         past = self.memory.get_relevant_lesson(user_request)
         experience_context = ""
         if past:
-            experience_context = f"\nPAST EXPERIENCE: For this task, you previously used {past['tool']}({past['action']}). "
+            experience_context = f"\n[CHRONIC_MEMORY]: Past experience for this task: {past['tool']}({past['action']}). "
             if not past['success']:
-                experience_context += f"CAUTION: That attempt FAILED with {past['error']}. DO NOT repeat the same mistake."
+                experience_context += f"CAUTION: Previous attempt FAILED with: {past['error']}. DO NOT REPEAT."
             else:
-                experience_context += "SUCCESS: This pattern worked. Reuse if applicable."
+                experience_context += "SUCCESS: This approach worked."
 
         system_prompt = (
-            "You are the Umbrasol Monolith (Unified Soul). "
-            "You have direct access to system tools.\n"
+            "You are Umbrasol-Monolith. Use INTERNAL_TOOLS whenever possible.\n"
+            "INTERNAL_TOOLS:\n"
+            "- physical: battery, thermals, power\n"
+            "- existence: uptime, identity, host-stats\n"
+            "- health: disk-cleanup, system-maintenance\n"
+            "- stats: CPU, RAM usage\n"
+            "- see_active: identify current window/chrome-tab\n"
+            "- shell: general linux commands\n"
             f"{experience_context}\n"
-            "REQ: " + user_request + "\n"
-            "RULE: Conduct an internal safety audit of your command before outputting.\n"
-            "NO CHATTER. NO INTRO. ONLY JSON.\n"
-            "FORMAT: {'res': 'thought', 'tool': 'shell|ls|python|scrape|edit|stats|existence|physical|power|health|see_raw|see_tree|see_meta|see_active|DONE', 'in': 'cmd', 'imp': 1-10, 'safe': true|false}"
+            "TASK: " + user_request + "\n"
+            "RULE: Output ONLY JSON. NO CHATTER.\n"
+            "{\n"
+            "  \"thought\": \"reasoning\",\n"
+            "  \"tool\": \"tool_name\",\n"
+            "  \"cmd\": \"arg\",\n"
+            "  \"safe\": true\n"
+            "}"
         )
         
-        response_text = self.monolith.think("NEXT ACTION?", system_prompt=system_prompt)
+        response_text = self.monolith.think("EXECUTE ONLY.", system_prompt=system_prompt)
         
+        # Robust JSON Extraction
         import re
-        json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
-        clean_json = json_match.group(0) if json_match else "{}"
+        import json
         
+        plan = {}
         try:
-            plan = json.loads(clean_json)
-            proposed_action = plan.get("in", "")
-            tool = plan.get("tool", "shell")
-            reasoning = plan.get("res", "Thinking...")
-            importance = plan.get("imp", 0)
-            is_internally_safe = plan.get("safe", True)
-            
-            assessment = "[SAFE]" if is_internally_safe else "[DANGER]"
+            # Try finding the last brace-enclosed block (usually the answer)
+            json_match = re.search(r'\{[^{}]*\}', response_text, re.DOTALL)
+            if json_match:
+                plan = json.loads(json_match.group(0))
         except:
-            proposed_action = response_text[:100]
-            tool = "shell"
-            reasoning = "N/A (Lazy JSON)"
-            importance = 0
-            assessment = "[SAFE] (Heuristic Fallback)"
+            # Fallback for Malformed JSON but clear content
+            pass
+            
+        tool = plan.get("tool", "shell")
+        action = plan.get("cmd", "")
+        reasoning = plan.get("thought", response_text[:100])
+        is_safe = plan.get("safe", True)
+        
+        # Safety normalization
+        assessment = "[SAFE]" if is_safe else "[DANGER]"
         
         return {
             "tool": tool,
-            "proposed_action": proposed_action,
+            "proposed_action": action,
             "reasoning": reasoning,
             "assessment": assessment,
-            "importance": importance
+            "importance": 5
         }
 
     def fast_literal_engine(self, user_request):

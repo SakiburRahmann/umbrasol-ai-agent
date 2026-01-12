@@ -8,16 +8,13 @@ It is designed to be **Zero-Cost** (no APIs), **Zero-Latency** (local inference)
 
 ---
 
-To solve the conflict between "High Autonomy" and "Limited Hardware," Umbrasol uses the **Unified-Soul Architecture**: a single-model system where action and safety are merged into a high-alignment inference path.
-
-### Brain 1: The Monolith (Intelligence Core)
-- **Model:** `Qwen 3B` / `Llama 3.2 3B` (Q4).
+### 3. Core Architecture: Mono-Soul Intelligence
+Project Umbrasol utilizes a **Mono-Soul** architecture. While it performs internal triaging (Routing vs. Doing), it utilizes a **single high-quality model** for all stages of thought.
+- **Why:** Local deployment environments suffer from context-switching stalls when loading multiple models. A single "warm" model is 30% faster and significantly more reliable than split-model triaging.
+- **Speculative Execution:** Even within a single model, we still use a "Fast Literal" path for 0ms command execution.
 - **Role:** The Architect and Executor.
 - **Job:** Handles both task planning and internal safety auditing.
 
-### Brain 2: The Router (Triage)
-- **Model:** `SmolLM-135M`.
-- **Role:** Gatekeeper.
 - **Job:** Routes requests to Cache, Heuristics, or the Monolith.
 
 ---

@@ -16,5 +16,29 @@
         "action": "ls /home/user",
         "error": "ls: cannot access '/home/user': No such file or directory\n",
         "success": false
+    },
+    "check battery": {
+        "tool": "physical",
+        "action": "",
+        "error": null,
+        "success": true
+    },
+    "check battery status": {
+        "tool": "physical",
+        "action": "",
+        "error": null,
+        "success": true
+    },
+    "show my ram usage": {
+        "tool": "stats",
+        "action": "",
+        "error": null,
+        "success": true
+    },
+    "who am i": {
+        "tool": "shell",
+        "action": "whoami",
+        "error": null,
+        "success": true
     }
 }

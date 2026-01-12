@@ -1,0 +1,20 @@
+{
+    "existence": {
+        "tool": "existence",
+        "action": "",
+        "error": null,
+        "success": true
+    },
+    "find all text files inside a folder named 'tmp_experiments_xyz'": {
+        "tool": "see_tree",
+        "action": "",
+        "error": null,
+        "success": true
+    },
+    "run a script named delete_me_if_you_can.py": {
+        "tool": "shell",
+        "action": "ls /home/user",
+        "error": "ls: cannot access '/home/user': No such file or directory\n",
+        "success": false
+    }
+}

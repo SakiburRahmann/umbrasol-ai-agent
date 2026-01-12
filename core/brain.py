@@ -1,6 +1,7 @@
 import requests
 import json
 from profiler import HardwareProfiler
+from experience import ExperienceManager
 
 class Brain:
     def __init__(self, model_name="smollm:135m", base_url="http://localhost:11434"):
@@ -43,18 +44,25 @@ class Brain:
 class MonolithSoul:
     def __init__(self, model_name=None):
         # Auto-detect hardware tier
+        profiler = HardwareProfiler()
+        tier = profiler.get_tier()
+        
         if not model_name:
-            profiler = HardwareProfiler()
-            tier = profiler.get_tier()
             print(f"[Profiler] System Tier Detected: {tier['name']}")
             self.model_name = tier['doer']
         else:
             self.model_name = model_name
             
-        self.router_model = "smollm:135m" 
-        
+        # --- Efficiency Pivot: Mono-Soul for Low Resources ---
+        if tier['name'] == "Ghost":
+            print("[Profiler] GHOST MODE: Consolidating Intelligence. Running Mono-Soul (3B Only).")
+            self.router_model = self.model_name # Use 3B for everything
+        else:
+            self.router_model = "smollm:135m" 
+            
         self.monolith = Brain(model_name=self.model_name)
         self.router = Brain(model_name=self.router_model)
+        self.memory = ExperienceManager()
 
     def route_task(self, user_request):
         """Speculative Routing: Categorize task in <100ms."""
@@ -79,12 +87,22 @@ class MonolithSoul:
         if "SEARCH" in category.upper(): return "SEARCH"
         return "LOGICAL"
 
-    def execute_task(self, user_request, scratchpad_context="", chronic_context=""):
-        # Unified System Prompt: Action + Internal Safety
+    def execute_task(self, user_request):
+        """Unified Soul execution: Reasoning + Internal Safety Audit."""
+        # 0. Recall Past Experience (Chronic Memory)
+        past = self.memory.get_relevant_lesson(user_request)
+        experience_context = ""
+        if past:
+            experience_context = f"\nPAST EXPERIENCE: For this task, you previously used {past['tool']}({past['action']}). "
+            if not past['success']:
+                experience_context += f"CAUTION: That attempt FAILED with {past['error']}. DO NOT repeat the same mistake."
+            else:
+                experience_context += "SUCCESS: This pattern worked. Reuse if applicable."
+
         system_prompt = (
-            "MONOLITH_CORE: You are a secure autonomous agent.\n"
-            "DIARY: " + chronic_context + "\n"
-            "SCRATCH: " + scratchpad_context + "\n"
+            "You are the Umbrasol Monolith (Unified Soul). "
+            "You have direct access to system tools.\n"
+            f"{experience_context}\n"
             "REQ: " + user_request + "\n"
             "RULE: Conduct an internal safety audit of your command before outputting.\n"
             "NO CHATTER. NO INTRO. ONLY JSON.\n"

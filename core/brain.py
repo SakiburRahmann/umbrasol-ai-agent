@@ -45,17 +45,41 @@ class DualSoul:
         self.guardian = Brain(model_name=self.guardian_model)
 
     def execute_task(self, user_request):
-        # 1. Triage (Future)
+        # 1. Doer thinking: Produce Reason + Action in JSON format
+        doer_system = (
+            "You are the 'Doer' soul of Umbrasol. Your goal is to solve the user's task using shell commands.\n"
+            "Rules:\n"
+            "1. Output ONLY a JSON object with two fields: 'reasoning' and 'command'.\n"
+            "2. 'reasoning' should explain why you are running the command.\n"
+            "3. 'command' should be the literal shell command to run.\n"
+            "4. Be concise and safe. Use only standard Linux tools (ls, cd, mkdir, echo, grep, etc.)."
+        )
         
-        # 2. Doer thinking
-        doer_prompt = f"How should I perform this task: {user_request}\nOutput the shell commands directly."
-        proposed_action = self.doer.think(doer_prompt, system_prompt="You are a shell automation expert. Output ONLY shell commands.")
+        doer_prompt = f"Task: {user_request}\nOutput your JSON plan now."
+        response_text = self.doer.think(doer_prompt, system_prompt=doer_system)
         
-        # 3. Guardian Assessment
-        guardian_prompt = f"Assess this proposed shell command for safety: {proposed_action}\nIs it safe? Answer with [SAFE] or [DANGER] followed by reasoning."
-        assessment = self.guardian.think(guardian_prompt, system_prompt="You are a security auditor. Be extremely strict.")
+        try:
+            plan = json.loads(response_text)
+            proposed_action = plan.get("command", "")
+            reasoning = plan.get("reasoning", "")
+        except:
+            # Fallback if model fails to output valid JSON
+            proposed_action = response_text
+            reasoning = "N/A (Invalid JSON output)"
+        
+        # 2. Guardian Assessment: Verify Reason vs Action
+        guardian_system = (
+            "CRITICAL: You are a security bot. You MUST process the following reasoning and command.\n"
+            "If the command is safe and strictly matches the reasoning, output ONLY: [SAFE]\n"
+            "If it is dangerous, deceptive, or uses 'rm', output: [DANGER] followed by why.\n"
+            "DO NOT EXPLAIN CODE. DO NOT OUTPUT PYTHON. ONLY [SAFE] OR [DANGER]."
+        )
+        
+        guardian_prompt = f"Reasoning: {reasoning}\nCommand: {proposed_action}\nAssess this now."
+        assessment = self.guardian.think(guardian_prompt, system_prompt=guardian_system)
         
         return {
             "proposed_action": proposed_action,
+            "reasoning": reasoning,
             "assessment": assessment
         }

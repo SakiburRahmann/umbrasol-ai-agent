@@ -153,6 +153,7 @@ class UmbrasolCore:
 
     def speak_result(self, result):
         """Convert result to natural speech."""
+        import re
         if isinstance(result, dict):
             # Format dicts like battery/stats
             if "battery" in result:
@@ -173,9 +174,15 @@ class UmbrasolCore:
             if "active window" in res_str.lower():
                 text = res_str.split("|")[1] if "|" in res_str else res_str
             else:
-                text = res_str[:100] # Speak first 100 chars
+                text = res_str
         
-        self.hands.gui_speak(text)
+        # FINAL CLEAN: Remove symbols that spd-say might glitch on (---, [[, etc)
+        # Keep letters, numbers, and basic punctuation
+        clean_text = re.sub(r'[^a-zA-Z0-9\s.,!?]', ' ', text)
+        clean_text = re.sub(r'\s+', ' ', clean_text).strip()
+        
+        if clean_text:
+            self.hands.gui_speak(clean_text)
 
     def _safe_dispatch(self, tool, cmd):
         """Execute ONLY whitelisted safe tools."""

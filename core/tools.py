@@ -184,9 +184,13 @@ class OperatorInterface:
 
     def gui_speak(self, text):
         """Layer 10: Communication (Voice Output)."""
+        if not text or not text.strip(): return "ERROR: Empty text."
         try:
-            self.logger.info(f"Speaking: {text}")
-            subprocess.run(f"spd-say '{text}'", shell=True, check=True)
+            # Clean text for speech (Remove single/double quotes to avoid synthesis hiccups)
+            safe_text = text.replace("'", "").replace('"', "").strip()
+            self.logger.info(f"Speaking: {safe_text}")
+            # Use list-mode subprocess to avoid shell-escaping issues
+            subprocess.run(["spd-say", safe_text], check=True)
             return f"SUCCESS: Spoke text."
         except Exception as e:
             return f"ERROR: {str(e)}"

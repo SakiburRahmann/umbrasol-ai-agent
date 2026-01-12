@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Project Specific
+logs/
+*.log
+
+# Models (though Ollama handles them, just in case)
+*.gguf
+*.bin

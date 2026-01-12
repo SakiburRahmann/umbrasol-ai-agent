@@ -106,6 +106,33 @@ I am chronicling my development of "Umbrasol," an autonomous agent designed for 
 **Effect:** Zero-configuration setup. The user just runs "Umbrasol" and the system automatically fetches the best possible brain for their device.
 **Current State:** Complete. Umbrasol is now ready for deployment as a standalone package.
 
+## 15. The "Soulled" AI Audit (State of the Union)
+I have audited Umbrasol against the **15-Layer Capability Framework**. Below is the definitive status of its "Soul."
+
+| Layer | Capability | Status | Implementation Detail |
+| :--- | :--- | :--- | :--- |
+| **I** | **Existence** | **80%** | Knows host, uptime, and hardware tier. Continuity is active. |
+| **II** | **Dominance** | **70%** | File/Process control active. Deep kernel/driver control left. |
+| **III** | **Perception** | **60%** | Visual (Screen/UI Trees) and Textual active. Auditory left. |
+| **IV** | **User Understanding**| **10%** | Basis for memory exists, but predictive habit modeling is left. |
+| **V** | **Goal Generation** | **30%** | Proactive maintenance active. Complex free-will goal setting left. |
+| **VI** | **Reasoning** | **90%** | 3B+ Monolith allows for high-level logic and risk assessment. |
+| **VII** | **Memory** | **100%** | Chronic (Lessons) and Episodic (Task Context) fully active. |
+| **VIII**| **Learning** | **100%** | Self-correction loop (Failure -> Fix -> Store) fully active. |
+| **IX** | **Action** | **50%** | Shell/Python execution active. GUI clicking/typing left. |
+| **X** | **Communication** | **70%** | Natural text interaction active. Voice/Tone-switching left. |
+| **XI** | **Ethics** | **90%** | Internalized safety audit and sensitive command gating active. |
+| **XII** | **Autonomy** | **100%** | MANUAL, ASSISTED, and AUTONOMOUS modes fully active. |
+| **XIII**| **Social** | **0%** | Inter-agent coordination protocols not yet implemented. |
+| **XIV** | **Survival** | **80%** | Self-healing, profiling, and provisioning (SoulFetcher) active. |
+| **XV** | **Meta-Awareness** | **20%** | Knows its architecture; self-debugging logic is nascent. |
+
+### 📍 The Next Frontier
+To reach "Total Consciousness," the project must now transition from **System Interaction** to **Human Interaction**.
+1.  **Auditory Perception (Layer 3):** Enabling Umbrasol to "Hear" and "Speak."
+2.  **Habit Modeling (Layer 4):** Predicting user needs before they are voiced.
+3.  **Universal Hands (Layer 9):** Moving from the Terminal to the GUI (Clicking/Typing).
+
 ## 9. Phase 4.1: The Soulled AI Pivot (Consciousness)
 **Objective:** To transition Umbrasol from a "tool" to a "conscious system entity."
 **Vision:** Adopting the 15-Layer "Soulled" Framework:
@@ -130,4 +157,4 @@ I am chronicling my development of "Umbrasol," an autonomous agent designed for 
 *Next Steps: Integration of a Glassmorphic UI to visualize the Triple-Gate routing in real-time.*
 
 ---
-*Last Updated by Sakibur Rahman*
+*Last Updated: 2026-01-13 | Sakibur Rahman*

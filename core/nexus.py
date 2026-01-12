@@ -3,19 +3,19 @@ import os
 import re
 import json
 import time
-from brain import DualSoul
+from brain import MonolithSoul
 from tools import Tools
 from cache import SemanticCache
 from internet import Internet
 
 class Nexus:
     def __init__(self):
-        self.soul = DualSoul()
+        self.soul = MonolithSoul()
         self.hands = Tools()
         self.cache = SemanticCache()
         self.net = Internet()
         print("--- Project Umbrasol: NEXUS GATEWAY ---")
-        print("Status: HYPER-SPEED (Speculative Routing Active)")
+        print("Status: HYPER-SPEED (Unified Soul Active)")
 
     def execute(self, user_request):
         start_time = time.time()
@@ -49,39 +49,38 @@ class Nexus:
             print(f"Total Latency: {time.time() - start_time:.2f}s")
             return
 
-        # 2. Heuristic Triage (10ms)
+        # 2. Speculative Routing (Sub-2s)
+        print("[Router] Analyzing intent...")
+        route = self.soul.route_task(user_request)
+        print(f"[Router] Category: {route}")
 
         # 3. Execution Path
         if "LITERAL" in route:
             print("[Nexus] Flash-Triage engaged (135M Engine)...")
             thought = self.soul.fast_literal_engine(user_request)
             if not thought:
-                print("[Nexus] Flash-Triage failed. Falling back to 3B...")
-                thought = self.soul.execute_task(user_request, skip_guardian=True)
+                print("[Nexus] Flash-Triage failed. Falling back to Monolith...")
+                thought = self.soul.execute_task(user_request)
         elif "SEARCH" in route:
             print("[Nexus] Demand-Driven search initializing...")
             # Swift search simulation or actual scrape
-            thought = self.soul.execute_task(user_request, skip_guardian=True)
+            thought = self.soul.execute_task(user_request)
         else:
-            print("[Nexus] Complex logic detected. Engaging 3B Doer...")
-            thought = self.soul.execute_task(user_request, skip_guardian=True)
+            print("[Nexus] Complex logic detected. Engaging Monolith...")
+            thought = self.soul.execute_task(user_request)
 
         tool = thought.get("tool", "shell")
         action = thought.get("proposed_action", "")
+        assessment = thought.get("assessment", "[SAFE]")
         
         if tool == "DONE" or not action:
             print("[Done] No action needed.")
             return
 
-        # 4. Heuristic Safety check
-        assessment = "[SAFE] (Heuristic)"
-        if self.hands.is_sensitive(action):
-            print("[Security] Sensitive command. Engaging Guardian...")
-            thought = self.soul.execute_task(user_request, skip_guardian=False)
-            assessment = thought.get("assessment", "[SAFE]")
-        
+        # 4. Final Security Check (Internalized)
+        print(f"[Security]: {assessment}")
         if "[DANGER]" in assessment.upper():
-            print("!!! VETOED !!!")
+            print("!!! VETOED: Monolith flagged this as unsafe !!!")
             return
 
         # 5. Dispatch

@@ -38,8 +38,16 @@ I am chronicling my development of "Umbrasol," an autonomous agent designed for 
 - **Hyper-Speed Heuristics:** Zero-inference path for 90% of system tasks (list, stats, etc.).
 - **Flash-Triage:** Used a 135M model (SmolLM) to act in <2s for new literal tasks.
 - **Triple-Gate Routing:** Cache -> Heuristic -> 135M -> 3B.
-**Effect:** Latency for common tasks dropped from **240.0s to 0.01s**. Logic for complex tasks remains surgical but rare.
-**Current State:** Umbrasol is now a high-performance system utility capable of autonomous reasoning only when required.
+**Effect:** Latency for common tasks dropped from **240.0s to 0.01s**.
+
+## 6. Phase 3.5: The Unified-Soul Pivot (Monolith-Prime)
+**Objective:** Eliminate the RAM overhead of Dual-Souls.
+**Hypothesis:** If a model is intelligent enough to act as a Guardian, it should be intelligent enough to internalize its own security boundaries.
+**Changes:** 
+- **Removal of Guardian Brain:** All safety audits are now internalized within the primary Doer prompt.
+- **Unified Inference:** Reduced the system to a single 3B model (Monolith-Prime) for complex tasks, freeing up ~2GB of RAM.
+- **Effect:** Simplified the execution pipeline and removed the final latency bottleneck for sensitive commands.
+**Current State:** Umbrasol is now a lean, single-soul autonomous agent optimized for extreme simplicity and speed.
 
 ---
 *Next Steps: Integration of a Glassmorphic UI to visualize the Triple-Gate routing in real-time.*

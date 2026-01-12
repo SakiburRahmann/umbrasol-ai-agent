@@ -1,19 +1,19 @@
 import sys
 import os
 import time
-from brain import DualSoul
+from brain import MonolithSoul
 from tools import Tools
 from memory import Memory
 from internet import Internet
 
 class Umbrasol:
     def __init__(self):
-        self.soul = DualSoul()
+        self.soul = MonolithSoul()
         self.hands = Tools()
         self.memory = Memory()
         self.net = Internet()
         print("--- Project Umbrasol: LITE CORE ---")
-        print("Status: SPEED OPTIMIZED (Demand-Driven)")
+        print("Status: SPEED OPTIMIZED (Unified Soul Active)")
 
     def run(self, task_description, max_steps=5):
         print(f"\n[REQUEST]: {task_description}")
@@ -44,18 +44,11 @@ class Umbrasol:
             print(f"[Plan]: {reasoning}")
             print(f"[Tool]: {tool} | [Action]: {action}")
             
-            # --- TOGGLED GUARDIAN (Phase 1.6 Logic) ---
-            assessment = "[SAFE] (Heuristic)"
-            if tool in ["shell", "python"] and self.hands.is_sensitive(action):
-                print("[Security] Sensitive pattern detected. Waking Guardian...")
-                # Re-run task check with Guardian enabled
-                thought = self.soul.execute_task(task_description, scratchpad, chronic, skip_guardian=False)
-                assessment = thought.get("assessment", "[SAFE]")
-            
+            # --- INTERNALIZED SAFETY (Phase 3.5 Logic) ---
             print(f"[Security]: {assessment}")
             
             if "[DANGER]" in assessment.upper():
-                print("!!! VETOED !!!")
+                print("!!! VETOED: Monolith flagged this as unsafe !!!")
                 self.memory.update_scratchpad(f"Cycle_{step}", reasoning, f"{tool}:{action}", "BLOCKED", "failed")
                 continue
             

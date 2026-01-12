@@ -39,24 +39,21 @@ class Brain:
             print(f" Error: {str(e)}")
             return f"ERROR_BRAIN_FAILURE: {str(e)}"
 
-# Placeholder for the Dual-Soul implementation
-class DualSoul:
-    def __init__(self, doer_model=None, guardian_model=None):
-        # Auto-detect hardware tier if models aren't specified
-        if not doer_model or not guardian_model:
+# The Unified-Soul implementation (Monolith-Prime)
+class MonolithSoul:
+    def __init__(self, model_name=None):
+        # Auto-detect hardware tier
+        if not model_name:
             profiler = HardwareProfiler()
             tier = profiler.get_tier()
             print(f"[Profiler] System Tier Detected: {tier['name']}")
-            self.doer_model = doer_model or tier['doer']
-            self.guardian_model = guardian_model or tier['guardian']
+            self.model_name = tier['doer']
         else:
-            self.doer_model = doer_model
-            self.guardian_model = guardian_model
-        # Nexus-Hyperdrive: 135M Router for literal triage
+            self.model_name = model_name
+            
         self.router_model = "smollm:135m" 
         
-        self.doer = Brain(model_name=self.doer_model)
-        self.guardian = Brain(model_name=self.guardian_model)
+        self.monolith = Brain(model_name=self.model_name)
         self.router = Brain(model_name=self.router_model)
 
     def route_task(self, user_request):
@@ -75,21 +72,20 @@ class DualSoul:
         if "SEARCH" in category.upper(): return "SEARCH"
         return "LOGICAL"
 
-    def execute_task(self, user_request, scratchpad_context="", chronic_context="", skip_guardian=True):
-        # 1. Doer: High-Density Command (HDC) Mode
-        doer_system = (
-            "HDC_MODE: ACTIVE\n"
+    def execute_task(self, user_request, scratchpad_context="", chronic_context=""):
+        # Unified System Prompt: Action + Internal Safety
+        system_prompt = (
+            "MONOLITH_CORE: You are a secure autonomous agent.\n"
             "DIARY: " + chronic_context + "\n"
             "SCRATCH: " + scratchpad_context + "\n"
             "REQ: " + user_request + "\n"
-            "RULE: NO CHATTER. NO INTRO. ONLY JSON.\n"
-            "FORMAT: {'res': 'thought', 'tool': 'shell|ls|python|scrape|edit|stats|DONE', 'in': 'cmd', 'imp': 1-10}"
+            "RULE: Conduct an internal safety audit of your command before outputting.\n"
+            "NO CHATTER. NO INTRO. ONLY JSON.\n"
+            "FORMAT: {'res': 'thought', 'tool': 'shell|ls|python|scrape|edit|stats|DONE', 'in': 'cmd', 'imp': 1-10, 'safe': true|false}"
         )
         
-        doer_prompt = "NEXT ACTION?"
-        response_text = self.doer.think(doer_prompt, system_prompt=doer_system)
+        response_text = self.monolith.think("NEXT ACTION?", system_prompt=system_prompt)
         
-        # Robust JSON cleaning using regex
         import re
         json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
         clean_json = json_match.group(0) if json_match else "{}"
@@ -100,21 +96,24 @@ class DualSoul:
             tool = plan.get("tool", "shell")
             reasoning = plan.get("res", "Thinking...")
             importance = plan.get("imp", 0)
+            is_internally_safe = plan.get("safe", True)
+            
+            assessment = "[SAFE]" if is_internally_safe else "[DANGER]"
         except:
-            # Emergency regex extraction for lazy models
-            proposed_action_match = re.search(r"'in':\s*'(.*?)'", response_text)
-            proposed_action = proposed_action_match.group(1) if proposed_action_match else response_text[:100]
+            proposed_action = response_text[:100]
             tool = "shell"
             reasoning = "N/A (Lazy JSON)"
             importance = 0
+            assessment = "[SAFE] (Heuristic Fallback)"
         
-        assessment = "[SAFE] (Lazy Mode)"
-        if not skip_guardian:
-            # 2. Guardian: Quick Guard Mode
-            guardian_system = "SECURITY_BOT. REASON: " + reasoning[:50] + ". OUTPUT '[SAFE]' OR '[DANGER]'."
-            guardian_prompt = f"ACTION: {tool}({proposed_action})"
-            assessment = self.guardian.think(guardian_prompt, system_prompt=guardian_system)
-        
+        return {
+            "tool": tool,
+            "proposed_action": proposed_action,
+            "reasoning": reasoning,
+            "assessment": assessment,
+            "importance": importance
+        }
+
     def fast_literal_engine(self, user_request):
         """Ultra-fast JSON command generator using 135M model."""
         system_prompt = (
@@ -123,7 +122,6 @@ class DualSoul:
         )
         response = self.router.think(user_request, system_prompt=system_prompt)
         
-        # 1. Regex hunter
         import re
         json_match = re.search(r'\{.*\}', response, re.DOTALL)
         clean_json = json_match.group(0) if json_match else "{}"
@@ -135,7 +133,6 @@ class DualSoul:
             if not action: raise Exception("No Action")
             return {"tool": tool, "proposed_action": action, "assessment": "[SAFE]", "importance": 1}
         except:
-            # 2. Heuristic fallback for conversational 135M
             if "list" in user_request.lower():
                 return {"tool": "ls", "proposed_action": ".", "assessment": "[SAFE]", "importance": 1}
             return None

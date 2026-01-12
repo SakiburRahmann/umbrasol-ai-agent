@@ -9,23 +9,17 @@ It is designed to be **Zero-Cost** (no APIs), **Zero-Latency** (local inference)
 
 ---
 
-To solve the conflict between "High Autonomy" and "Limited Hardware," Umbrasol uses the **Nexus-Hyperdrive Architecture**: a speed-revolution system designed for sub-2-second responsiveness on 8GB RAM devices.
+To solve the conflict between "High Autonomy" and "Limited Hardware," Umbrasol uses the **Unified-Soul Architecture**: a single-model system where action and safety are merged into a high-alignment inference path.
 
-### Brain 1: The Router (Intelligence Triage)
-- **Model:** `SmolLM-135M` (Ultra-Fast / 1ms prefill).
-- **Role:** The Gatekeeper.
-- **Job:** Decides if a task is "Literal" (Instant execution) or "Logical" (Needs deep thinking).
-
-### Brain 2: The Doer (Action Intelligence)
+### Brain 1: The Monolith (Intelligence Core)
 - **Model:** `Qwen 3B` / `Llama 3.2 3B` (Q4).
-- **Role:** The Strategist.
-- **Job:** Executes "Logical" tasks that require reasoning.
+- **Role:** The Architect and Executor.
+- **Job:** Handles both task planning and internal safety auditing.
 
-### Brain 3: The Guardian (Security Intelligence)
+### Brain 2: The Router (Triage)
 - **Model:** `SmolLM-135M`.
-- **Role:** Security.
-- **Job:** Audits only sensitive commands in real-time.
-interfaces (Python REPL, Shell, ADB, File API) so the Doer can choose the most efficient "attachment" for the task.
+- **Role:** Gatekeeper.
+- **Job:** Routes requests to Cache, Heuristics, or the Monolith.
 
 ---
 
@@ -81,8 +75,7 @@ Umbrasol prevents "Goldfish Memory" and Hallucinations through a three-tier syst
 ### C. The "Web Look-Aside" (Fact-Check)
 - **Logic:** Before starting any task, Umbrasol performs a "Swift Search." It fetches the latest documentation or facts to bridge the "intelligence gap" of small local models.
 
-4. **SECURE:** If the command matches a sensitive pattern (rm, sudo, etc.), trigger the **Guardian Brain**.
-5. **REFLECT:** Record the outcome. Repeat only if the task is incomplete.
+4. **REFLECT:** Record the outcome. Repeat only if the task is incomplete.
 
 ---
 

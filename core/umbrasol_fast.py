@@ -2,27 +2,21 @@ import sys
 import os
 import re
 import json
-from brain import DualSoul
+from brain import MonolithSoul
 from tools import Tools
 
 class Switchblade:
     def __init__(self):
-        self.soul = DualSoul()
+        self.soul = MonolithSoul()
         self.hands = Tools()
         print("--- Project Umbrasol: SWITCHBLADE CORE ---")
-        print("Mode: HIGH-SPEED DIRECT ACTION")
+        print("Mode: HIGH-SPEED (Monolith-Prime Active)")
 
     def execute(self, user_request):
         print(f"\n[Direct]: {user_request}")
         
-        # 1. Triage: Is it a simple search?
-        if any(w in user_request.lower() for w in ["search", "latest", "what is"]):
-            print("[Search] Demand-Driven search triggered...")
-            # We skip this for 'ls' or 'mkdir' to save time.
-        
-        # 2. Single-Step Thinking
-        # Feed the request directly to the doer without a massive history unless needed
-        thought = self.soul.execute_task(user_request, skip_guardian=True)
+        # 1. Single-Step Thinking (Unified Soul)
+        thought = self.soul.execute_task(user_request)
         
         tool = thought.get("tool", "shell")
         action = thought.get("proposed_action", "")
@@ -33,18 +27,12 @@ class Switchblade:
 
         print(f"[Action]: {tool}({action})")
 
-        # 3. Heuristic Guard (Zero-Latency Safety)
-        assessment = "[SAFE] (Heuristic)"
-        if self.hands.is_sensitive(action):
-            print("[Security] Sensitive command detected. Performing surgical check...")
-            # Waking the Guardian ONLY for sensitive patterns
-            thought = self.soul.execute_task(user_request, skip_guardian=False)
-            assessment = thought.get("assessment", "[SAFE]")
-        
+        # 2. Final Security Check (Internalized)
+        assessment = thought.get("assessment", "[SAFE]")
         print(f"[Security]: {assessment}")
 
         if "[DANGER]" in assessment.upper():
-            print("!!! VETOED: Command deemed unsafe !!!")
+            print("!!! VETOED: Monolith flagged this as unsafe !!!")
             return
 
         # 4. Immediate Execution

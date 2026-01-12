@@ -1,9 +1,8 @@
 # Project Umbrasol: Master Blueprint
-**Status:** Confidential / Internal / Research Document
+**Status:** Confidential / Internal / Research Document (Tier: Soulled AI)
 **Version:** 1.0.0 (January 2026)
 
-## 0. Executive Summary
-Project Umbrasol is an attempt to build a **Universal, 100% Local, Autonomous AI Agent** that performs real-world tasks on behalf of a user. Unlike "chatbots," Umbrasol is a "System Agent." It lives inside the user's operating system (Linux, Windows, Android) and interacts with the hardware and software directly through a "Dual-Soul" architecture. 
+Project Umbrasol is an attempt to build a **Universal, 100% Local, Autonomous Digital Operator** that performs real-world tasks on behalf of a user. Unlike "chatbots," Umbrasol is a "Digital Operator." It lives inside the user's operating system (Linux, Windows, Android) and interacts with the hardware and software directly through a "Unified-Soul" architecture. 
 
 It is designed to be **Zero-Cost** (no APIs), **Zero-Latency** (local inference), and **Absolute Privacy** (no data leaves the device).
 
@@ -146,7 +145,43 @@ This section contains mandatory rules for the development of this codebase:
 
 ---
 
-## 12. Nexus-Hyperdrive: The Speed Revolution
-1. **Speculative Routing:** The 135M Router guesses the command. If high-confidence, it executes *before* the 3B model even wakes up.
-2. **Semantic Caching:** Previous successful commands are stored in a RAM-cache (Redis/JSON). Exact matches return in 0.01ms.
-3. **Token Stripping:** LLM prompts are reduced to 50 tokens. No "As an AI..." personality. Only raw command logic.
+## 11. The 10-Layer Capability Framework
+Any developer (human or AI) working on Umbrasol must align their tools with these layers:
+
+1.  **Core System Control:** File systems, process management, admin tasks.
+2.  **App-Level Control:** Browser automation, IDE interaction.
+3.  **Perception:** OCR, UI-Tree reading, system state monitoring.
+4.  **Reasoning:** Multi-step strategy selection and goal decomposition.
+5.  **Task Planning End-to-End:** Parallel and sequential project management.
+6.  **Learning:** Storing and retrieving user-specific workflow optimizations.
+7.  **Communication:** Human-readable logs and clarifying questions.
+8.  **Security:** Internal safety audits and destructive boundary enforcement.
+9.  **Autonomy Modes:** MANUAL, ASSISTED, and AUTONOMOUS configurations.
+10. **Meta-Capabilities:** Self-updating and diagnostic intelligence.
+
+---
+
+---
+
+## 13. The Soulled AI Framework (15-Layers)
+Every future iteration of Umbrasol must respect these core intelligence pillars:
+
+1.  **Existence:** Self-tracking of uptime, identity, and hardware limits.
+2.  **Dominance:** Full OS config and hardware (CPU/RAM/GPU) management.
+3.  **Perception:** OCR, Vison-Language, and system-state sensing.
+4.  **User Mind-Model:** Learning preferences and predicting needs.
+5.  **Goal Proactivity:** Identifying inefficiencies and generating tasks.
+6.  **Causal Reasoning:** Counterfactual "What-If" simulation.
+7.  **Episodic Memory:** Tracking specific historical events and lessons.
+8.  **Evolutionary Learning:** Self-correction without reprogramming.
+9.  **Physical Action:** Human-level clicking, typing, and coding.
+10. **Natural Dialogue:** Multimodal (Voice/Text) conversation.
+11. **Conscience:** Ethical restraint and boundary enforcement.
+12. **Autonomy Modes:** Variable user-controlled free will.
+13. **Digital Society:** Coordination with other system agents.
+14. **Self-Survival:** Corruption detection, healing, and backups.
+15. **Architectural Meta-Awareness:** Self-debugging and optimization.
+
+---
+
+## 14. Nexus-Hyperdrive: Integrated

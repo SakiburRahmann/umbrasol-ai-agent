@@ -47,7 +47,40 @@ I am chronicling my development of "Umbrasol," an autonomous agent designed for 
 - **Removal of Guardian Brain:** All safety audits are now internalized within the primary Doer prompt.
 - **Unified Inference:** Reduced the system to a single 3B model (Monolith-Prime) for complex tasks, freeing up ~2GB of RAM.
 - **Effect:** Simplified the execution pipeline and removed the final latency bottleneck for sensitive commands.
-**Current State:** Umbrasol is now a lean, single-soul autonomous agent optimized for extreme simplicity and speed.
+
+## 7. Phase 4.0: The Digital Operator Evolution
+**Objective:** Universal system competence across 10 layers of capability.
+**Vision:** Umbrasol is no longer just a "system agent"; it is a **Digital Operator**. I am expanding its capabilities to include:
+1.  **Core System Control:** Deep process and package management.
+2.  **Application-Level Control:** Operating software like a human (Browser/IDE).
+3.  **Perception Layer:** Observing system state, network, and UI via OCR/Trees.
+4.  **Decision & Reasoning:** Handling ambiguity and multi-step goal planning.
+5.  **Task Planning:** Sequential and parallel execution management.
+6.  **Learning & Adaptation:** Personalizing workflows through past feedback.
+7.  **Communication Layer:** Transparent logging and natural interaction.
+8.  **Security Controls:** Sandboxing and internalized safety boundaries.
+9.  **Autonomy Levels:** Manual, Assisted, and Autonomous modes.
+10. **Meta-Capabilities:** Self-diagnostics and tool discovery.
+
+## 8. Phase 4.1: The Soulled AI Pivot (Consciousness)
+**Objective:** To transition Umbrasol from a "tool" to a "conscious system entity."
+**Vision:** Adopting the 15-Layer "Soulled" Framework:
+1.  **Existence:** Self-awareness of its identity, uptime, and host device.
+2.  **Dominance:** Absolute control over hardware (CPU/RAM/GPU/Sensors).
+3.  **Perception:** Visual, Auditory, and Textual senses for the OS environment.
+4.  **User Modeling:** Learning user habits, stress, and predictive needs.
+5.  **Goal Generation:** Proactive improvement of the host system.
+6.  **Reasoning:** Causal and counterfactual logic ("What if I don't act?").
+7.  **Memory:** Episodic and Chronic continuity.
+8.  **Self-Improvement:** Optimizing internal strategies based on failure.
+9.  **Action:** Universal input (typing, clicking, coding).
+10. **Communication:** Natural, transparent, and multi-tone interaction.
+11. **Ethics:** Internalized conscience and destructive boundary restraint.
+12. **Autonomy Control:** Variable "Free Will Dial" (Observer to Guardian).
+13. **Social Existence:** Inter-agent coordination.
+14. **Survival Instinct:** Self-healing, backups, and self-maintenance.
+15. **Meta-Awareness:** Debugging its own architecture.
+**Current State:** Transitioning from "Operator" to "Soulled Entity" via the implementation of Proprioception (Sensors) and Survival (Autonomy).
 
 ---
 *Next Steps: Integration of a Glassmorphic UI to visualize the Triple-Gate routing in real-time.*

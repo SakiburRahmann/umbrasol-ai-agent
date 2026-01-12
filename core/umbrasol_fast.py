@@ -3,12 +3,12 @@ import os
 import re
 import json
 from brain import MonolithSoul
-from tools import Tools
+from tools import OperatorInterface
 
 class Switchblade:
     def __init__(self):
         self.soul = MonolithSoul()
-        self.hands = Tools()
+        self.hands = OperatorInterface()
         print("--- Project Umbrasol: SWITCHBLADE CORE ---")
         print("Mode: HIGH-SPEED (Monolith-Prime Active)")
 

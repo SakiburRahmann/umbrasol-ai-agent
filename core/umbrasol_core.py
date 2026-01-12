@@ -2,14 +2,14 @@ import sys
 import os
 import time
 from brain import MonolithSoul
-from tools import Tools
+from tools import OperatorInterface
 from memory import Memory
 from internet import Internet
 
 class Umbrasol:
     def __init__(self):
         self.soul = MonolithSoul()
-        self.hands = Tools()
+        self.hands = OperatorInterface()
         self.memory = Memory()
         self.net = Internet()
         print("--- Project Umbrasol: LITE CORE ---")

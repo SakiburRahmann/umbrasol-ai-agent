@@ -97,25 +97,14 @@ class UmbrasolCore:
                 full_message += content
                 sentence_buffer += content
                 
-                # If we have a full sentence or a natural pause, speak it instantly
-                # Added commas, semicolons, and colons for faster initiation
-                # Also added a word count threshold (12 words) for long clauses
+                # If we have a natural pause or 8 words, speak it instantly
                 word_count = len(sentence_buffer.split())
-                if any(p in sentence_buffer for p in [".", "!", "?", ",", ";", ":", "\n"]) or word_count > 12:
-                    # Extract the first completed segment
-                    import re
-                    # Split by any of the triggers
-                    parts = re.split(r'([.!?,\n;: ])', sentence_buffer)
-                    
-                    # We need to find the best split point (last punctuation or word limit)
-                    # For simplicity, if we have a punctuation or word count hit, we process it
-                    if word_count > 12 or any(p in sentence_buffer for p in [".", "!", "?", ",", ";", ":", "\n"]):
-                        to_speak = sentence_buffer.strip()
-                        if to_speak and self.voice_mode:
-                            print(f"[AI] {to_speak}")
-                            self.hands.gui_speak(to_speak)
-                        # Clear buffer
-                        sentence_buffer = ""
+                if any(p in sentence_buffer for p in [".", "!", "?", ",", ";", ":", "\n"]) or word_count > 8:
+                    to_speak = sentence_buffer.strip()
+                    if to_speak and self.voice_mode:
+                        print(f"[AI] {to_speak}")
+                        self.hands.gui_speak(to_speak)
+                    sentence_buffer = ""
             
             elif chunk_data["type"] == "action":
                 actions.extend(chunk_data.get("actions", []))

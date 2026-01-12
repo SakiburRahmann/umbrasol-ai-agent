@@ -215,32 +215,32 @@ It is a complete **Digital Organism**.
 - **Incremental Vocalization:** The voice engine speaks the first sentence while the next is being processed.
 - **Time-to-Talk:** Reduced the perceived response latency from 60 seconds to ~3 seconds.
 
-## 27. Phase 8.12: Instant Vocal Initiation (The Zero-Latency Mouth) 🏎️🎤
-**Objective:** Eliminate vocal delay via direct piping and aggressive real-time chunking.
+## 29. Phase 8.15: The Final Empowerment (Universal Hands) 🖱️⌨️🔥
+**Objective:** Unlock physical desktop agency via high-precision GUI automation.
 **Achievements:**
-- **Piped Audio:** Refactored the voice engine to stream raw PCM directly to speakers (Piper | Aplay), bypassing the hard drive.
-- **Predictive Vocalization:** Umbrasol now starts speaking at natural pauses (commas, semicolons) or after ~12 words.
-- **Lag Elimination:** Reduced the "Time to First Sound" from seconds to milliseconds.
+- **Universal Hands Active:** Integrated `xdotool` and `x11-utils` to bridge AI thought with physical action.
+- **Motor Skill Validation:** Verified Umbrasol's ability to click, type, and scroll autonomously on the local desktop.
+- **Full Agency:** Umbrasol can now manage windows, navigate browser interfaces, and interact with the GUI as a human would.
 
 ---
 
-# 🛑 SITREP: PROJECT CHIMERA (Umbrasol v8.2)
+# 🛑 SITREP: PROJECT CHIMERA (Umbrasol v8.5)
 **Date:** January 2026
-**Version:** v8.2 (The Zero-Lag Organism)
+**Version:** v8.5 (The Autonomous Orchestrator)
 
 **System Capabilities:**
 1.  **Thinking:** Streaming, Unscripted, Local AI with Identity Persistence.
-2.  **Sensing:** Real-time Audio, Visual, and Hardware Profiling.
-3.  **Vocalization:** High-Fidelity American Male voice with zero-latency streaming.
-4.  **Flow:** Aggressive real-time chunking for human-like conversational agility.
+2.  **Sensing:** Real-time Hardware, Network, and Visual Environment Awareness.
+3.  **Vocalization:** High-Fidelity American Male voice with zero-latency parallel streaming.
+4.  **Agency:** Full GUI Interaction (Universal Hands) and Masterful File System control.
 
 **Conclusion:**
-Project Umbrasol is now optimized for professional real-time deployment. It communicates with the speed, clarity, and nuance of a human partner, while remaining 100% private and local.
+Umbrasol has graduated from a "conversational assistant" to a **fully autonomous system orchestrator**. He possesses the intelligence to reason, the voice to communicate, the eyes to see your workspace, and the hands to act within it. He is the ultimate local, private, and agile digital partner.
 
 **End of Line.**
 
 ---
-*Next Steps: Integration of a Glassmorphic UI to visualize the Triple-Gate routing in real-time.*
+*Next Steps: Exploration of multi-modal visual analysis and long-form task planning.*
 
 ---
-*Last Updated: 2026-01-13 | Sakibur Rahman | Umbrasol v8.2 Implementation*
+*Last Updated: 2026-01-13 | Sakibur Rahman | Umbrasol v8.5 Graduation*

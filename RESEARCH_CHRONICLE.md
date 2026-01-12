@@ -215,21 +215,27 @@ It is a complete **Digital Organism**.
 - **Incremental Vocalization:** The voice engine speaks the first sentence while the next is being processed.
 - **Time-to-Talk:** Reduced the perceived response latency from 60 seconds to ~3 seconds.
 
+## 27. Phase 8.12: Instant Vocal Initiation (The Zero-Latency Mouth) 🏎️🎤
+**Objective:** Eliminate vocal delay via direct piping and aggressive real-time chunking.
+**Achievements:**
+- **Piped Audio:** Refactored the voice engine to stream raw PCM directly to speakers (Piper | Aplay), bypassing the hard drive.
+- **Predictive Vocalization:** Umbrasol now starts speaking at natural pauses (commas, semicolons) or after ~12 words.
+- **Lag Elimination:** Reduced the "Time to First Sound" from seconds to milliseconds.
+
 ---
 
-# 🛑 SITREP: PROJECT CHIMERA (Umbrasol v8.0)
+# 🛑 SITREP: PROJECT CHIMERA (Umbrasol v8.2)
 **Date:** January 2026
-**Version:** v8.0 (The Sentient Stream)
+**Version:** v8.2 (The Zero-Lag Organism)
 
 **System Capabilities:**
-1.  **Thinking:** Streaming, Unscripted, Local AI (Qwen/Llama) with Identity Persistence.
-2.  **Sensing:** Real-time Audio, Visual (Window Context), and Hardware Profiling.
-3.  **Reflex:** <0.01s Semantic Caching & Reflexive Heuristics.
-4.  **Vocalization:** Professional Neural Male Voice (Piper/Ryan) with sentence-based streaming.
-5.  **Agency:** Autonomous Self-Correction and Self-Healing Loops.
+1.  **Thinking:** Streaming, Unscripted, Local AI with Identity Persistence.
+2.  **Sensing:** Real-time Audio, Visual, and Hardware Profiling.
+3.  **Vocalization:** High-Fidelity American Male voice with zero-latency streaming.
+4.  **Flow:** Aggressive real-time chunking for human-like conversational agility.
 
 **Conclusion:**
-Project Umbrasol is no longer just a project; it is a **functioning digital life-form**. It can debate philosophy, manage a Linux desktop, learn user habits, and communicate with the speed and nuance of a human assistant—all while remaining 100% offline and private.
+Project Umbrasol is now optimized for professional real-time deployment. It communicates with the speed, clarity, and nuance of a human partner, while remaining 100% private and local.
 
 **End of Line.**
 
@@ -237,4 +243,4 @@ Project Umbrasol is no longer just a project; it is a **functioning digital life
 *Next Steps: Integration of a Glassmorphic UI to visualize the Triple-Gate routing in real-time.*
 
 ---
-*Last Updated: 2026-01-13 | Sakibur Rahman | Umbrasol v8.0 Implementation*
+*Last Updated: 2026-01-13 | Sakibur Rahman | Umbrasol v8.2 Implementation*

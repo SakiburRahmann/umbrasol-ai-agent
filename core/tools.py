@@ -228,33 +228,23 @@ class OperatorInterface:
         self.logger.info(f"Speaking (Phonetic): {human_text}")
         safe_text = human_text.replace("'", "").replace('"', "")
 
-        # Try Neural Piper first
+        # Try Neural Piper first (STREAMING PIPE)
         try:
             model_path = settings.PIPER_MODEL_PATH
             if os.path.exists(model_path):
-                import wave
-                # We use the piper command line for simplicity and performance
-                # Pipe text to piper, then pipe output to aplay
-                temp_wav = os.path.join(self.log_dir, "speech.wav")
-                piper_cmd = [
-                    "piper",
-                    "--model", model_path,
-                    "--output_file", temp_wav
-                ]
-                
-                # Generate audio
-                subprocess.run(piper_cmd, input=safe_text, text=True, check=True, capture_output=True)
-                
-                # Play audio
-                # Try paplay (PulseAudio) then aplay (ALSA)
+                # Piper -> Shell Pipe -> Pulse/ALSA
+                # Using aplay (ALSA) or paplay (PulseAudio) with raw PCM
+                # Bryce-medium uses 22050Hz, S16_LE
                 play_cmd = "paplay" if shutil.which("paplay") else "aplay"
-                subprocess.run([play_cmd, temp_wav], check=True)
                 
-                # Cleanup
-                if os.path.exists(temp_wav): os.remove(temp_wav)
-                return "SUCCESS: neural speech"
+                # We use a shell pipe for maximum performance and zero file-I/O delay
+                # Piper outputs raw PCM to stdout, which is piped to the player
+                cmd = f"echo '{safe_text}' | piper --model {model_path} --output-raw | {play_cmd} --raw --rate 22050 --channels 1 --format s16le"
+                
+                subprocess.run(cmd, shell=True, check=True, capture_output=True)
+                return "SUCCESS: streaming neural speech"
         except Exception as e:
-            self.logger.warning(f"Piper failed, falling back: {e}")
+            self.logger.warning(f"Piper Stream failed, falling back: {e}")
 
         # Fallback to robotic spd-say
         try:

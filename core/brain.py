@@ -17,14 +17,26 @@ class Brain:
             "options": {
                 "temperature": temperature
             },
-            "stream": False
+            "stream": True # Switch to stream for potential progress tracking
         }
         
         try:
-            response = requests.post(self.base_url, json=payload)
+            full_content = ""
+            print(f"[{self.model_name}] Thinking...", end="", flush=True)
+            response = requests.post(self.base_url, json=payload, stream=True)
             response.raise_for_status()
-            return response.json()["message"]["content"]
+            
+            for line in response.iter_lines():
+                if line:
+                    chunk = json.loads(line)
+                    if not chunk.get("done"):
+                        content = chunk["message"]["content"]
+                        full_content += content
+                        print(".", end="", flush=True) # Simple progress dot
+            print(" Done.")
+            return full_content
         except Exception as e:
+            print(f" Error: {str(e)}")
             return f"ERROR_BRAIN_FAILURE: {str(e)}"
 
 # Placeholder for the Dual-Soul implementation
@@ -44,42 +56,50 @@ class DualSoul:
         self.doer = Brain(model_name=self.doer_model)
         self.guardian = Brain(model_name=self.guardian_model)
 
-    def execute_task(self, user_request):
-        # 1. Doer thinking: Produce Reason + Action in JSON format
+    def execute_task(self, user_request, scratchpad_context="", chronic_context="", skip_guardian=True):
+        # 1. Doer: High-Density Command (HDC) Mode
         doer_system = (
-            "You are the 'Doer' soul of Umbrasol. Your goal is to solve the user's task using shell commands.\n"
-            "Rules:\n"
-            "1. Output ONLY a JSON object with two fields: 'reasoning' and 'command'.\n"
-            "2. 'reasoning' should explain why you are running the command.\n"
-            "3. 'command' should be the literal shell command to run.\n"
-            "4. Be concise and safe. Use only standard Linux tools (ls, cd, mkdir, echo, grep, etc.)."
+            "HDC_MODE: ACTIVE\n"
+            "DIARY: " + chronic_context + "\n"
+            "SCRATCH: " + scratchpad_context + "\n"
+            "REQ: " + user_request + "\n"
+            "RULE: NO CHATTER. NO INTRO. ONLY JSON.\n"
+            "FORMAT: {'res': 'thought', 'tool': 'shell|scrape|edit|DONE', 'in': 'cmd', 'imp': 1-10}"
         )
         
-        doer_prompt = f"Task: {user_request}\nOutput your JSON plan now."
+        doer_prompt = "NEXT ACTION?"
         response_text = self.doer.think(doer_prompt, system_prompt=doer_system)
         
+        # Robust JSON cleaning using regex
+        import re
+        json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+        clean_json = json_match.group(0) if json_match else "{}"
+        
         try:
-            plan = json.loads(response_text)
-            proposed_action = plan.get("command", "")
-            reasoning = plan.get("reasoning", "")
+            plan = json.loads(clean_json)
+            proposed_action = plan.get("in", "")
+            tool = plan.get("tool", "shell")
+            reasoning = plan.get("res", "Thinking...")
+            importance = plan.get("imp", 0)
         except:
-            # Fallback if model fails to output valid JSON
-            proposed_action = response_text
-            reasoning = "N/A (Invalid JSON output)"
+            # Emergency regex extraction for lazy models
+            proposed_action_match = re.search(r"'in':\s*'(.*?)'", response_text)
+            proposed_action = proposed_action_match.group(1) if proposed_action_match else response_text[:100]
+            tool = "shell"
+            reasoning = "N/A (Lazy JSON)"
+            importance = 0
         
-        # 2. Guardian Assessment: Verify Reason vs Action
-        guardian_system = (
-            "CRITICAL: You are a security bot. You MUST process the following reasoning and command.\n"
-            "If the command is safe and strictly matches the reasoning, output ONLY: [SAFE]\n"
-            "If it is dangerous, deceptive, or uses 'rm', output: [DANGER] followed by why.\n"
-            "DO NOT EXPLAIN CODE. DO NOT OUTPUT PYTHON. ONLY [SAFE] OR [DANGER]."
-        )
-        
-        guardian_prompt = f"Reasoning: {reasoning}\nCommand: {proposed_action}\nAssess this now."
-        assessment = self.guardian.think(guardian_prompt, system_prompt=guardian_system)
+        assessment = "[SAFE] (Lazy Mode)"
+        if not skip_guardian:
+            # 2. Guardian: Quick Guard Mode
+            guardian_system = "SECURITY_BOT. REASON: " + reasoning[:50] + ". OUTPUT '[SAFE]' OR '[DANGER]'."
+            guardian_prompt = f"ACTION: {tool}({proposed_action})"
+            assessment = self.guardian.think(guardian_prompt, system_prompt=guardian_system)
         
         return {
+            "tool": tool,
             "proposed_action": proposed_action,
             "reasoning": reasoning,
-            "assessment": assessment
+            "assessment": assessment,
+            "importance": importance
         }

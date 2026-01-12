@@ -1,61 +1,91 @@
 import sys
 import os
+import time
 from brain import DualSoul
 from tools import Tools
+from memory import Memory
+from internet import Internet
 
 class Umbrasol:
     def __init__(self):
         self.soul = DualSoul()
         self.hands = Tools()
-        print("--- Project Umbrasol Initialized ---")
-        print("Status: GHOST MODE ACTIVE")
+        self.memory = Memory()
+        self.net = Internet()
+        print("--- Project Umbrasol: LITE CORE ---")
+        print("Status: SPEED OPTIMIZED (Demand-Driven)")
 
-    def run(self, task_description):
-        print(f"\n[Task Request]: {task_description}")
+    def run(self, task_description, max_steps=5):
+        print(f"\n[REQUEST]: {task_description}")
+        self.memory.clear_scratchpad()
         
-        # 1. Thinking Phase
-        print("[Thinking] Brain 1 (Doer) generating strategy...")
-        result = self.soul.execute_task(task_description)
-        
-        reasoning = result.get("reasoning", "N/A")
-        proposed_action = result.get("proposed_action", "")
-        assessment = result.get("assessment", "")
-        
-        print(f"\n[Doer Reasoning]:\n{reasoning}")
-        print(f"\n[Proposed Action]:\n{proposed_action}")
-        print(f"\n[Guardian Assessment]:\n{assessment}")
-        
-        # 2. Safety Gate
-        if "[DANGER]" in assessment.upper():
-            print("\n!!! SECURITY BLOCK !!!")
-            print(f"Guardian Veto: {assessment}")
-            return
-        
-        if "[SAFE]" not in assessment.upper():
-            print("\n[Warning]: Assessment unclear. Aborting for safety.")
-            return
+        # Umbrasol Lite: No automatic pre-search. 
+        # The agent searches only if it chooses to use the 'scrape' tool.
 
-        # 3. Execution Phase
-        print("\n[Execution] Proceeding with action...")
-        
-        # Determine if it's a shell command or a tool call
-        # For the prototype, we assume shell unless it's a known pattern
-        execution_result = self.hands.execute_shell(proposed_action)
-        
-        print("\n[Execution Output]:")
-        if isinstance(execution_result, dict):
-            print(f"Exit Code: {execution_result.get('exit_code')}")
-            print(f"Output:\n{execution_result.get('output')}")
-        else:
-            print(execution_result)
-        
-        print("\n--- Task Step Complete ---")
+        for step in range(1, max_steps + 1):
+            print(f"\n--- Cycle {step} ---")
+            
+            # Context Optimization: Only feed distilled scratchpad to save tokens
+            scratchpad = self.memory.search_scratchpad()
+            chronic = self.memory.get_chronic_memory()
+            
+            # Thinking Phase
+            thought = self.soul.execute_task(task_description, scratchpad, chronic)
+            
+            tool = thought.get("tool", "shell")
+            action = thought.get("proposed_action", "")
+            reasoning = thought.get("reasoning", "Thinking...")
+            importance = thought.get("importance", 0)
+            
+            if tool == "DONE" or not action:
+                print("\n[Complete] Goal achieved.")
+                break
+                
+            print(f"[Plan]: {reasoning}")
+            print(f"[Tool]: {tool} | [Action]: {action}")
+            
+            # --- TOGGLED GUARDIAN (Phase 1.6 Logic) ---
+            assessment = "[SAFE] (Heuristic)"
+            if tool in ["shell", "python"] and self.hands.is_sensitive(action):
+                print("[Security] Sensitive pattern detected. Waking Guardian...")
+                # Re-run task check with Guardian enabled
+                thought = self.soul.execute_task(task_description, scratchpad, chronic, skip_guardian=False)
+                assessment = thought.get("assessment", "[SAFE]")
+            
+            print(f"[Security]: {assessment}")
+            
+            if "[DANGER]" in assessment.upper():
+                print("!!! VETOED !!!")
+                self.memory.update_scratchpad(f"Cycle_{step}", reasoning, f"{tool}:{action}", "BLOCKED", "failed")
+                continue
+            
+            # Execution
+            try:
+                if tool == "shell": result = self.hands.execute_shell(action)
+                elif tool == "python": result = self.hands.execute_python(action)
+                elif tool == "scrape": result = self.hands.scrape_web(action)
+                elif tool == "ls": result = self.hands.list_dir(action if action else ".")
+                elif tool == "cd": result = self.hands.change_dir(action)
+                elif tool == "edit":
+                    if "|" in action:
+                        p, l, c = action.split('|', 2)
+                        result = self.hands.edit_line(p, int(l), c)
+                    else: result = "ERROR: Format p|l|c"
+                else: result = f"ERROR: Unknown tool '{tool}'"
+            except Exception as e:
+                result = f"EXEC_ERR: {str(e)}"
+            
+            print(f"[Output]: {str(result)[:60]}...")
+            self.memory.update_scratchpad(f"Cycle_{step}", reasoning, f"{tool}:{action}", str(result))
+            
+            if importance >= 9:
+                self.memory.promote_to_diary(f"{task_description}: {reasoning}", importance)
+
+        print("\n--- Mission Ended ---")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python chimera_core.py 'your task here'")
+        print("Usage: python core/umbrasol_core.py 'query'")
         sys.exit(1)
-        
-    task = sys.argv[1]
     agent = Umbrasol()
-    agent.run(task)
+    agent.run(sys.argv[1])

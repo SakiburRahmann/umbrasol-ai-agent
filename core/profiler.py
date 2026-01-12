@@ -42,7 +42,7 @@ class HardwareProfiler:
             return {
                 "name": "Ghost",
                 "doer": "qwen2.5:3b", # Reliable fallback for low RAM
-                "guardian": "phi3:mini"
+                "guardian": "smollm:135m"
             }
 
 if __name__ == "__main__":

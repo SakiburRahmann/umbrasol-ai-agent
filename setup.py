@@ -16,10 +16,13 @@ MODEL_DIR = "models"
 MODEL_PATH = os.path.join(MODEL_DIR, "model")
 
 # Piper Settings
-PIPER_VOICE = "en_US-lessac-medium"
-PIPER_URL_BASE = "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/"
-PIPER_FILES = [f"{PIPER_VOICE}.onnx", f"{PIPER_VOICE}.onnx.json"]
-PIPER_DIR = os.path.join(MODEL_DIR, "voice")
+try:
+    from config import settings
+    PIPER_VOICE = settings.PIPER_VOICE
+    PIPER_DIR = settings.PIPER_MODEL_DIR
+except ImportError:
+    PIPER_VOICE = "en_US-ryan-medium"
+    PIPER_DIR = os.path.join(MODEL_DIR, "voice")
 
 def download_file(url, target_path):
     print(f"[DOWNLOAD] {url} -> {target_path}")
@@ -61,17 +64,30 @@ def download_vosk_model():
 
 def download_piper_model():
     os.makedirs(PIPER_DIR, exist_ok=True)
-    for filename in PIPER_FILES:
-        target = os.path.join(PIPER_DIR, filename)
-        if os.path.exists(target):
-            print(f"[SETUP] Piper file {filename} found. Skipping.")
-            continue
+    
+    # URL Pattern: en/en_US/{name}/{quality}/{full_name}.onnx
+    # Example: en_US-ryan-medium -> name=ryan, quality=medium
+    try:
+        parts = PIPER_VOICE.split("-")
+        name = parts[1]
+        quality = parts[2]
+        url_base = f"https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/{name}/{quality}/"
         
-        print(f"[SETUP] Downloading Piper neural voice: {filename}...")
-        download_file(PIPER_URL_BASE + filename, target)
+        files = [f"{PIPER_VOICE}.onnx", f"{PIPER_VOICE}.onnx.json"]
+        
+        for filename in files:
+            target = os.path.join(PIPER_DIR, filename)
+            if os.path.exists(target):
+                print(f"[SETUP] Piper file {filename} found. Skipping.")
+                continue
+            
+            print(f"[SETUP] Downloading Piper neural voice: {filename}...")
+            download_file(url_base + filename, target)
+    except Exception as e:
+        print(f"[SETUP] Warning: Could not construct Piper URL for {PIPER_VOICE}: {e}")
 
 def main():
-    print("--- Umbrasol Setup Wizard (Phase 8.5) ---")
+    print("--- Umbrasol Setup Wizard (Phase 8.6) ---")
     download_vosk_model()
     download_piper_model()
     print("[SETUP] System ready. Run 'python main.py' to start.")

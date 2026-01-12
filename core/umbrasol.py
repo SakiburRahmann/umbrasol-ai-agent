@@ -197,8 +197,9 @@ class UmbrasolCore:
         # Replace underscores and dashes with spaces for flow
         text = text.replace("_", " ").replace("-", " ")
         
-        # Convert "N/A" or "NaN" to human-readable
-        text = text.replace("N/A", "not available").replace("nan", "not available")
+        # Convert "N/A" or "NaN" to human-readable (Use word boundaries \b to avoid breaking words like "resonance")
+        text = re.sub(r'\bN/A\b', 'not available', text)
+        text = re.sub(r'\bnan\b', 'not available', text, flags=re.IGNORECASE)
 
         # FINAL CLEAN: Keep ONLY letters, numbers, and very basic punctuation
         clean_text = re.sub(r'[^a-zA-Z0-9\s.,!?]', ' ', text)

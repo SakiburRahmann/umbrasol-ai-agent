@@ -45,10 +45,11 @@ class MonolithSoul:
             "see_raw", "proc_list", "net", "gui_speak", "ls"
         }
 
-    def execute_task(self, user_request):
-        """Minimal AI call with strict safety."""
+    def execute_task(self, user_request, context=""):
+        """Minimal AI call with strict safety and Context."""
         # Ultra-compressed prompt
         prompt = (
+            f"Context: {context}\n"
             f"Task: {user_request}\n"
             "Output ONLY: tool,cmd\n"
             "Tools: physical,existence,stats,see_active,ls,gui_speak\n"

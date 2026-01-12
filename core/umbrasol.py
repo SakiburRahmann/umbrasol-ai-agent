@@ -4,36 +4,49 @@ import threading
 from tools import OperatorInterface
 from brain_v2 import MonolithSoul
 from cache import SemanticCache
+from habit import HabitManager
 # from internet import Internet # To be integrated in Phase 6.X
 
 class UmbrasolCore:
     """
-    Umbrasol v6.0: The Unified Core (Project Chimera)
-    Combines 0.001s Instant Heuristics with Semantic Caching and Safety-First AI.
+    Umbrasol v6.2: Context-Aware & Habitual (Project Chimera)
+    Combines Heuristics + Habits + Cache + Safe AI.
     """
     def __init__(self):
         self.soul = MonolithSoul()
         self.hands = OperatorInterface()
         self.cache = SemanticCache()
-        print("--- Umbrasol v6.0: UNIFIED CORE ---")
-        print("System: ONLINE | Mode: HYBRID (Heuristic + Safe AI)")
+        self.habit = HabitManager()
+        print("--- Umbrasol v6.2: CONTEXT-AWARE CORE ---")
+        print("System: ONLINE | Mode: HYBRID (Heuristic + Habit + Safe AI)")
 
     def execute(self, user_request):
         start_time = time.time()
         print(f"\n[Request]: {user_request}")
 
-        # LAYER 0: SEMANTIC CACHE (0.000s)
-        # Instant recall of previously successful AI executions
+        # LAYER 0: CONTEXT SENSING (Visual)
+        active_window = self.hands.read_active_window()
+        context_str = f"[Active Window: {active_window}]"
+        print(f"[SENSE] Context: {active_window}")
+
+        # LAYER 0.5: HABIT PREDICTION (Subconscious)
+        # "If I'm in VS Code at 9am, run 'git status'"
+        # habit_cmd, confidence = self.habit.predict(active_window)
+        # if habit_cmd:
+        #    print(f"[HABIT] Strong pattern detected ({confidence}x). Suggesting: {habit_cmd}")
+        #    # Auto-execute or suggest? For now, we trust heuristics first.
+
+        # LAYER 1: SEMANTIC CACHE (0.000s)
         cached = self.cache.get(user_request)
         if cached:
             print(f"[CACHE] Hit! Executing known pattern.")
             result = self._safe_dispatch(cached['tool'], cached['command'])
             print(f"[Result]: {str(result)[:200]}...")
             print(f"[Time]: {time.time() - start_time:.3f}s")
+            self.habit.learn(active_window, getattr(result, "tool", "cache")) # Reinforce habit
             return
 
-        # LAYER 1: INSTANT HEURISTICS (0.001s)
-        # Hardcoded 95% bypass for common system commands
+        # LAYER 2: INSTANT HEURISTICS (0.001s)
         req = user_request.lower().strip()
         instant_map = {
             "battery": ("physical", ""),
@@ -57,39 +70,35 @@ class UmbrasolCore:
                 result = self._safe_dispatch(tool, cmd)
                 print(f"[Result]: {str(result)[:200]}")
                 print(f"[Time]: {time.time() - start_time:.3f}s")
+                self.habit.learn(active_window, f"{tool}:{cmd}") # Learn this habit
                 return
 
-        # LAYER 2: MINIMAL AI (Safety-First)
-        # Only for novel requests that need reasoning
-        print("[AI] Novel request. Engaging Brain_v2...")
-        thought = self.soul.execute_task(user_request)
+        # LAYER 3: MINIMAL AI (Safety-First + Context)
+        print(f"[AI] Novel request. Engaging Brain_v2 with Context...")
+        thought = self.soul.execute_task(user_request, context=context_str)
         
         actions = thought.get("actions", [])
         if not actions:
             print("[AI] No actions generated.")
             return
 
-        # Execute Actions with Self-Correction
         success = True
         for action in actions:
             tool = action.get("tool", "stats")
             cmd = action.get("cmd", "")
             
-            # Layer 8: Self-Correction Loop could go here (simplified for v6.0)
             result = self._safe_dispatch(tool, cmd)
             print(f"[Result]: {str(result)[:200]}")
             
             if "ERROR" in str(result):
                 success = False
-                # Future: Trigger self-correction retry here
         
-        # LAYER 7: LEARNING
-        # If successful, cache the result for next time
+        # LAYER 4: LEARNING
         if success and len(actions) == 1:
-            # We currently cache simple 1-step actions
             action = actions[0]
             self.cache.set(user_request, action['tool'], action['cmd'])
-            print("[LEARNING] Pattern cached for future instant recall.")
+            self.habit.learn(active_window, f"{action['tool']}:{action['cmd']}")
+            print("[LEARNING] Pattern cached & habit formed.")
 
         print(f"[Time]: {time.time() - start_time:.3f}s")
 

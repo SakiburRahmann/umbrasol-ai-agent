@@ -152,33 +152,57 @@ class UmbrasolCore:
         print(f"[Time]: {time.time() - start_time:.3f}s")
 
     def speak_result(self, result):
-        """Convert result to natural speech."""
+        """Convert result to natural human speech, stripping machine-isms."""
         import re
+        
+        # 1. PHRASING: Convert raw data to human sentences
         if isinstance(result, dict):
-            # Format dicts like battery/stats
             if "battery" in result:
-                text = f"Battery is at {result.get('battery')}."
+                val = str(result.get('battery')).replace("N/A", "not available")
+                text = f"The battery is currently {val}."
             elif "identity" in result:
-                text = f"I am {result.get('identity')}. System is {result.get('status')}."
+                text = f"I am {result.get('identity')}. My status is {result.get('status')}."
             elif "cpu" in result:
-                text = f"CPU is at {result['cpu']} percent. RAM is at {result['ram']} percent."
+                text = f"The processor is at {result['cpu']} percent, and memory usage is at {result['ram']} percent."
             elif "bytes_sent" in result:
-                text = "Network statistics retrieved."
+                text = "I have retrieved the network statistics."
             else:
-                text = "Task complete."
+                text = "The task is complete."
         elif isinstance(result, list):
-            text = f"I found {len(result)} items."
+            text = f"I have found {len(result)} items related to your request."
         else:
             # String result
             res_str = str(result)
-            if "active window" in res_str.lower():
-                text = res_str.split("|")[1] if "|" in res_str else res_str
+            if "Title:" in res_str and "|" in res_str:
+                # Detect Window Metadata: "ID: 0x... | Title: Name"
+                title = res_str.split("Title:")[-1].strip()
+                text = f"The current active window is {title}."
+            elif "active window" in res_str.lower():
+                # Generic fallback for active window mentions
+                title = res_str.split("|")[1].strip() if "|" in res_str else res_str
+                text = f"The active window is {title}."
             else:
                 text = res_str
         
-        # FINAL CLEAN: Remove symbols that spd-say might glitch on (---, [[, etc)
-        # Keep letters, numbers, and basic punctuation
+        # 2. SANITIZATION: Strip machine-centric patterns
+        # Remove labels that sound robotic
+        text = text.replace("ID:", "").replace("Title:", "")
+        
+        # Remove Hex IDs (e.g. 0xabcdef123)
+        text = re.sub(r'0x[a-fA-F0-9]+', '', text)
+        
+        # Shorten/Cleanup paths (e.g. /home/user/file -> file)
+        text = re.sub(r'/[a-zA-Z0-9._/-]+/', ' ', text)
+        
+        # Replace underscores and dashes with spaces for flow
+        text = text.replace("_", " ").replace("-", " ")
+        
+        # Convert "N/A" or "NaN" to human-readable
+        text = text.replace("N/A", "not available").replace("nan", "not available")
+
+        # FINAL CLEAN: Keep ONLY letters, numbers, and very basic punctuation
         clean_text = re.sub(r'[^a-zA-Z0-9\s.,!?]', ' ', text)
+        # Normalize whitespace
         clean_text = re.sub(r'\s+', ' ', clean_text).strip()
         
         if clean_text:

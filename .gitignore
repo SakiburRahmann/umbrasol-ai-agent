@@ -12,3 +12,5 @@ logs/
 # Models (though Ollama handles them, just in case)
 *.gguf
 *.bin
+# Test Outputs
+today.txt

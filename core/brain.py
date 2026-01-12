@@ -58,6 +58,13 @@ class MonolithSoul:
 
     def route_task(self, user_request):
         """Speculative Routing: Categorize task in <100ms."""
+        # --- Efficiency Optimization: Heuristic Gate ---
+        # If the query is complex, skip the 135M router and go straight to 3B.
+        logic_triggers = ["how to", "write", "code", "explain", "why", "script", "create a", "solve"]
+        if len(user_request.split()) > 10 or any(t in user_request.lower() for t in logic_triggers):
+            # print("[Profiler] Heuristic Check: Complex Query. Skipping Router.")
+            return "LOGICAL"
+
         router_system = (
             "CAT_STRICT: Triage the request.\n"
             "RULE: Output ONLY 1 word: [LITERAL] [LOGICAL] [SEARCH]. NO TEXT.\n"

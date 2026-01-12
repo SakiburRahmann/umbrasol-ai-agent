@@ -32,6 +32,34 @@ class Nexus:
             print(f"Total Latency: {time.time() - start_time:.2f}s")
             return
 
+        # 1.5 Hyper-Speed Heuristic (Zero-Inference / Sub-0.1s)
+        # This skips BOTH models for familiar phrasing.
+        fast_maps = {
+            "list files": ("ls", "."),
+            "ls": ("ls", "."),
+            "show files": ("ls", "."),
+            "system stats": ("stats", ""),
+            "cpu usage": ("stats", ""),
+            "check ram": ("stats", ""),
+            "check battery": ("physical", ""),
+            "check physical": ("physical", ""),
+            "check existence": ("existence", ""),
+            "who am i": ("shell", "whoami"),
+            "current dir": ("shell", "pwd"),
+            "uptime": ("existence", ""),
+            "health": ("health", ""),
+            "show windows": ("see_tree", ""),
+            "active window": ("see_active", "")
+        }
+        
+        req_clean = user_request.lower().strip().replace("?", "")
+        if req_clean in fast_maps:
+            print("[NEXUS_FAST] Hyper-Speed Heuristic Match (0.00s Inference Bypass).")
+            tool, action = fast_maps[req_clean]
+            self._dispatch(tool, action)
+            print(f"Total Latency: {time.time() - start_time:.2f}s")
+            return
+
         # 2. Speculative Routing
         route = self.soul.route_task(user_request)
         

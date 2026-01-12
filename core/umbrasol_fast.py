@@ -51,9 +51,18 @@ class Switchblade:
         try:
             if tool == "shell": result = self.hands.execute_shell(action)
             elif tool == "ls": result = self.hands.list_dir(action if action else ".")
+            elif tool == "python": result = self.hands.execute_python(action)
+            elif tool == "scrape": result = self.hands.scrape_web(action)
+            elif tool == "edit":
+                # Expects path|line|content
+                if "|" in action:
+                    p, l, c = action.split("|", 2)
+                    result = self.hands.edit_line(p, int(l), c)
+                else: result = "ERROR: Fast-edit requires 'path|line|content' format."
+            elif tool == "stats": result = self.hands.get_system_stats()
             else: result = f"ERROR: Fast-core doesn't support '{tool}' yet."
             
-            print(f"[Output]: {str(result)[:200]}...")
+            print(f"[Output]: {str(result)[:500]}...")
         except Exception as e:
             print(f"[Error]: {str(e)}")
 

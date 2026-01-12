@@ -1,5 +1,5 @@
 # Project Umbrasol: Master Blueprint
-**Status:** Confidential / Internal / Agent-Handoff Ready
+**Status:** Confidential / Internal / Research Document
 **Version:** 1.0.0 (January 2026)
 
 ## 0. Executive Summary
@@ -9,17 +9,23 @@ It is designed to be **Zero-Cost** (no APIs), **Zero-Latency** (local inference)
 
 ---
 
-To solve the conflict between "High Autonomy" and "Limited Hardware," Umbrasol uses the **Lite-Memento Architecture**: a speed-optimized version of the original architecture designed for 8GB RAM devices.
+To solve the conflict between "High Autonomy" and "Limited Hardware," Umbrasol uses the **Nexus-Hyperdrive Architecture**: a speed-revolution system designed for sub-2-second responsiveness on 8GB RAM devices.
 
-### Brain 1: The Doer (Action Intelligence)
-- **Role:** The Strategist and Executor.
-- **Job:** Takes the user's natural language request ("The Boss"), searches online for the latest info, creates a "Scratchpad" plan, and executes it step-by-step.
-- **Target Models (2026):** `GLM-4.7 Thinking` (High reasoning), `Llama 3.1 8B`, `Qwen 2.5 7B`.
+### Brain 1: The Router (Intelligence Triage)
+- **Model:** `SmolLM-135M` (Ultra-Fast / 1ms prefill).
+- **Role:** The Gatekeeper.
+- **Job:** Decides if a task is "Literal" (Instant execution) or "Logical" (Needs deep thinking).
 
-### Brain 3: The Universal Hand (Toolkit)
-- **Role:** The Executor.
-- **Analogy:** "A human hand equipped with a drill, hammer, and surgical blade."
-- **Job:** Provides specialized interfaces (Python REPL, Shell, ADB, File API) so the Doer can choose the most efficient "attachment" for the task.
+### Brain 2: The Doer (Action Intelligence)
+- **Model:** `Qwen 3B` / `Llama 3.2 3B` (Q4).
+- **Role:** The Strategist.
+- **Job:** Executes "Logical" tasks that require reasoning.
+
+### Brain 3: The Guardian (Security Intelligence)
+- **Model:** `SmolLM-135M`.
+- **Role:** Security.
+- **Job:** Audits only sensitive commands in real-time.
+interfaces (Python REPL, Shell, ADB, File API) so the Doer can choose the most efficient "attachment" for the task.
 
 ---
 
@@ -75,10 +81,6 @@ Umbrasol prevents "Goldfish Memory" and Hallucinations through a three-tier syst
 ### C. The "Web Look-Aside" (Fact-Check)
 - **Logic:** Before starting any task, Umbrasol performs a "Swift Search." It fetches the latest documentation or facts to bridge the "intelligence gap" of small local models.
 
-## 5. Lite Execution Loop (Direct & Safe)
-1. **CAPTURE:** Take user request.
-2. **TRIAGE:** Check if the task is simple (e.g., "List files"). If yes, skip internet search.
-3. **DO:** Execute the step.
 4. **SECURE:** If the command matches a sensitive pattern (rm, sudo, etc.), trigger the **Guardian Brain**.
 5. **REFLECT:** Record the outcome. Repeat only if the task is incomplete.
 
@@ -141,20 +143,17 @@ Umbrasol is not just a shell executor. It has a "Universal Hand" with specialize
 
 ---
 
+## 10. Project Integrity: Research & Maintenance
+This section contains mandatory rules for the development of this codebase:
+
+1.  **RESEARCH CHRONICLE:** Every major milestone, architectural pivot, or performance breakthrough MUST be logged in `RESEARCH_CHRONICLE.md`. This maintains a professional research trail.
+2.  **GHOST-TIER FIRST:** All features must be optimized for 8GB RAM.
+3.  **ABSOLUTE LOCALITY:** No cloud-based or API-based overrides.
+4.  **HYPER-SPEED GUIDELINE:** Latency must be kept under 5 seconds for basic tasks.
+
 ---
 
-## 11. The Switchblade Strategy (Speed vs. Surgery)
-To solve the bottleneck of slow local models, Umbrasol uses a "Switchblade" execution model:
-
-1.  **Direct Mode (Fast):** For tasks like `ls`, `mkdir`, `cat`. 
-    - No Internet Search.
-    - No Guardian Brain.
-    - Single-Step JSON output.
-    - Result in <10 seconds.
-
-2.  **Surgical Mode (Autonomous):** For tasks like `Refactor this project` or `rm deep-folder`.
-    - Triggers the "Memento" recursive loop.
-    - Uses Swift-Search and Dual-Soul verification.
-    - Result in minutes (High Reliability).
-
-3.  **Heuristic Trigger:** A Python-level filter scans the "Doer" output. If the command contains `rm`, `sudo`, `mv`, or `chmod`, it automatically forces a re-evaluation by the **Guardian Brain**.
+## 12. Nexus-Hyperdrive: The Speed Revolution
+1. **Speculative Routing:** The 135M Router guesses the command. If high-confidence, it executes *before* the 3B model even wakes up.
+2. **Semantic Caching:** Previous successful commands are stored in a RAM-cache (Redis/JSON). Exact matches return in 0.01ms.
+3. **Token Stripping:** LLM prompts are reduced to 50 tokens. No "As an AI..." personality. Only raw command logic.

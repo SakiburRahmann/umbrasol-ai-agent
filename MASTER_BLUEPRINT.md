@@ -19,7 +19,19 @@ Project Umbrasol utilizes a **Mono-Soul** architecture. While it performs intern
 
 ---
 
-## 2. Dynamic Hardware Profiling & Tiered Strategy
+## 1. Layer 0: Soul Provisioning (The Delivery)
+Umbrasol is delivered as a lightweight shell (Flutter/Python). Upon first boot, the **SoulFetcher** conducts a hardware audit to determine the "Intelligence Tier" and fetches the corresponding weights.
+- **Ghost (Low-End / Mobile):** Fetches `Qwen-3B` or `Llama-3.2-1B`. (Optimized for 4-8GB RAM).
+- **Centurion (Mid-Range):** Fetches `Llama-3.1-8B` or `Mistral-7B`. (Optimized for 16GB RAM).
+- **Leviathan (High-End / Workstation):** Fetches `GLM4-9B-Thinking` or `Llama-3.3-70B` (via server).
+- **Format:** GGUF (via Llama.cpp) or Ollama-native depending on platform.
+
+## 2. Identity & Vision (MASTER)
+Umbrasol is a **Soulled AI Agent** designed for complete digital autonomy.
+
+---
+
+## 3. Dynamic Hardware Profiling & Tiered Strategy
 Umbrasol includes a **Hardware Profiler** that runs at startup. It detects Total RAM, VRAM (NVIDIA/AMD), and NPU availability to automatically map the system to one of the following intelligence tiers.
 
 ### Tier 1: "Leviathan" - High-End PC / Workstation (32GB+ RAM / 16GB+ VRAM)

@@ -49,7 +49,7 @@ class MonolithSoul:
         
         if not model_name:
             print(f"[Profiler] System Tier: {tier['name']}")
-            self.model_name = tier['doer']
+            self.model_name = tier['soul']
         else:
             self.model_name = model_name
             

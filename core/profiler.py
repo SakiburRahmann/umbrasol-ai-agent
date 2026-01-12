@@ -15,22 +15,20 @@ class HardwareProfiler:
         if os.path.exists(self.config_path):
             try:
                 with open(self.config_path, 'r') as f:
-                    cached_tier = json.load(f)
-                    # print(f"[Profiler] Using cached tier: {cached_tier['name']}")
-                    return cached_tier
+                    return json.load(f)
             except: pass
 
         # 2. Perform Hardware Audit
         ram_gb = psutil.virtual_memory().total / (1024**3)
         has_gpu = self._check_gpu()
         
-        # Logic for Tier Assignment
+        # Mono-Soul Logic: One high-quality model per tier
         if ram_gb >= 30 or (has_gpu and ram_gb >= 16):
-            tier = {"name": "Leviathan", "doer": "glm4.7-thinking", "guardian": "llama3.1:8b"}
+            tier = {"name": "Leviathan", "soul": "glm4.7-thinking"}
         elif ram_gb >= 8:
-            tier = {"name": "Centurion", "doer": "llama3.1:8b", "guardian": "phi3:mini"}
+            tier = {"name": "Centurion", "soul": "llama3.1:8b"}
         else:
-            tier = {"name": "Ghost", "doer": "qwen2.5:3b", "guardian": "smollm:135m"}
+            tier = {"name": "Ghost", "soul": "qwen2.5:3b"}
 
         # 3. Save Cache
         try:
@@ -52,8 +50,5 @@ if __name__ == "__main__":
     profiler = HardwareProfiler()
     tier = profiler.get_tier()
     print(f"System Detected: {profiler.os_type}")
-    print(f"RAM: {profiler.total_ram_gb:.2f} GB")
-    print(f"GPU Detected: {profiler.has_gpu}")
     print(f"Assigning Tier: {tier['name']}")
-    print(f"Active Doer: {tier['doer']}")
-    print(f"Active Guardian: {tier['guardian']}")
+    print(f"Active Soul: {tier['soul']}")

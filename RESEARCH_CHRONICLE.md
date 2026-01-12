@@ -97,7 +97,14 @@ I am chronicling my development of "Umbrasol," an autonomous agent designed for 
 - **Zero-Inference Heuristics:** Hardened the keyword-based fast-map. Common system intents (battery, RAM, uptime) now resolve at **0.00s latency**.
 - **Smart Learning:** Self-correction loop remains active, allowing the Mono-Soul to learn from its 3B-thinking errors.
 **Effect:** Umbrasol is now both the smartest and fastest version of itself, delivering instant system responses and high-quality reasoning.
-**Current State:** Complete. Project Umbrasol has reached architectural maturity.
+## 14. Phase 4.7: Soul Provisioning (The Delivery Ghost)
+**Objective:** Automate the "Software -> Soul" connection for end-users.
+**Changes:**
+- **Layer 0 (Provisioning):** Implemented `core/soul_fetcher.py`.
+- **Logic:** Upon installation, Umbrasol identifies the hardware tier and automatically "pulls" the correct model weights (e.g., Qwen-3B for Ghost tier).
+- **Architecture:** Standardized on GGUF for edge-devices and Ollama for workstations.
+**Effect:** Zero-configuration setup. The user just runs "Umbrasol" and the system automatically fetches the best possible brain for their device.
+**Current State:** Complete. Umbrasol is now ready for deployment as a standalone package.
 
 ## 9. Phase 4.1: The Soulled AI Pivot (Consciousness)
 **Objective:** To transition Umbrasol from a "tool" to a "conscious system entity."

@@ -16,7 +16,7 @@ OLLAMA_BASE_URL = "http://localhost:11434"
 
 # Voice Settings (Piper)
 PIPER_MODEL_DIR = os.path.join(MODELS_DIR, "voice")
-PIPER_VOICE = "en_US-ryan-medium" # Neural voice model (Male)
+PIPER_VOICE = "en_US-bryce-medium" # High-clarity American Male
 PIPER_MODEL_PATH = os.path.join(PIPER_MODEL_DIR, f"{PIPER_VOICE}.onnx")
 
 # Execution Settings

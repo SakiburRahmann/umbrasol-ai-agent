@@ -200,10 +200,33 @@ class OperatorInterface:
         # Normalize whitespace
         clean = re.sub(r'\s+', ' ', clean).strip()
         
-        if not clean: return "ERROR: No speakable content after cleaning."
-        
-        self.logger.info(f"Speaking: {clean}")
-        safe_text = clean.replace("'", "").replace('"', "")
+        # 1. Phonetic Humanizer: Fix delivery and contractions
+        phonetic_map = {
+            r"\bI'd\b": "I would",
+            r"\bI've\b": "I have",
+            r"\bI'm\b": "I am",
+            r"\bYou're\b": "You are",
+            r"\bIt's\b": "It is",
+            r"\bDon't\b": "Do not",
+            r"\bCan't\b": "Cannot",
+            r"\bWon't\b": "Will not",
+            r"\bHe's\b": "He is",
+            r"\bShe's\b": "She is",
+            r"\bThey're\b": "They are",
+            r"\bWe're\b": "We are",
+            r"\bCouldn't\b": "Could not",
+            r"\bShouldn't\b": "Should not",
+            r"\bWouldn't\b": "Would not",
+            r"\bnan\b": "not available",
+            "Umbrasol": "Um-bra-sol", # Phonetical break for clarity
+            "Ollama": "O-lama"
+        }
+        human_text = clean
+        for pattern, replacement in phonetic_map.items():
+            human_text = re.sub(pattern, replacement, human_text, flags=re.IGNORECASE)
+
+        self.logger.info(f"Speaking (Phonetic): {human_text}")
+        safe_text = human_text.replace("'", "").replace('"', "")
 
         # Try Neural Piper first
         try:

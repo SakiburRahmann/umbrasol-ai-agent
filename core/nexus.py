@@ -67,103 +67,83 @@ class Nexus:
                 print(f"Total Latency: {time.time() - start_time:.2f}s")
                 return
 
-        # 2. Execution Phase (Optimized for Mono-Soul)
+        executed_actions = []
+        def eager_dispatch(plan):
+            tool = plan.get("tool")
+            cmd = plan.get("cmd")
+            if (tool, cmd) not in executed_actions:
+                self._dispatch(tool, cmd, user_request)
+                executed_actions.append((tool, cmd))
+
+        # 2. Execution Phase (Eager Mono-Soul)
         if self.soul.router_model == self.soul.model_name:
-            # Mono-Soul Logic: Skip redundant routing call (Save ~20s)
-            print("[NEXUS] Mono-Soul Active. Directing request to Monolith.")
-            thought = self.soul.execute_task(user_request)
+            print("[NEXUS] Mono-Soul Active. Eager Pulse initialized.")
+            thought = self.soul.execute_task(user_request, callback=eager_dispatch)
         else:
-            # Multi-Soul Logic: Triage with 135M first
             route = self.soul.route_task(user_request)
             if "LITERAL" in route:
                 thought = self.soul.fast_literal_engine(user_request)
-                if not thought: thought = self.soul.execute_task(user_request)
+                if not thought: thought = self.soul.execute_task(user_request, callback=eager_dispatch)
+                else: eager_dispatch(thought)
             else:
-                thought = self.soul.execute_task(user_request)
+                thought = self.soul.execute_task(user_request, callback=eager_dispatch)
 
-        for attempt in range(2): # Allow 1 automatic correction attempt
-            tool = thought.get("tool", "shell")
-            action = thought.get("proposed_action", "")
-            assessment = thought.get("assessment", "[SAFE]")
-            
-            # 4. Global Autonomy Shield (Layer 9)
-            # ... (skipped for core logic)
-            
-            # 5. Dispatch
-            result = self._dispatch(tool, action, user_request)
-            
-            # Layer 8: Self-Correction (True Learning)
-            is_error = False
-            error_msg = ""
-            if isinstance(result, str) and "ERROR" in result.upper():
-                is_error = True
-                error_msg = result
-            elif isinstance(result, dict) and result.get("exit_code", 0) != 0:
-                is_error = True
-                error_msg = result.get("output", "Return code non-zero")
+        # Ensure everything in thought['actions'] was handled
+        for action in thought.get("actions", []):
+            eager_dispatch(action)
 
-            if is_error and attempt == 0:
-                print(f"[Learning] Analysis of failure: {error_msg[:100]}...")
-                # Re-wake the soul with the failure context
-                error_context = f"Your previous attempt {tool}({action}) FAILED with error: {error_msg}. Avoid this and try a different approach."
-                thought = self.soul.execute_task(user_request + f"\n[RETRY_CONTEXT: {error_context}]")
-                continue 
-            else:
-                break 
-        
-        print(f"Total Latency: {time.time() - start_time:.2f}s")
+        print(f"Total Time-to-Action: {time.time() - start_time:.2f}s")
 
     def _dispatch(self, tool, action, user_request=None):
         if self.simulate:
-            print(f"[SIMULATION]: Would execute {tool}({action})")
+            print(f"[SIMULATION]: {tool}({action})")
             return
             
+        # Parallel Execution for specific non-critical tasks (Communication)
+        if tool == "gui_speak":
+            import threading
+            print(f"[Action]: {tool}({action}) [BKGND]")
+            threading.Thread(target=self.hands.gui_speak, args=(action,)).start()
+            return "SUCCESS: Speaking in background."
+
         print(f"[Action]: {tool}({action})")
-        # Logic for execution...
         try:
             result = "ERROR: No action"
-            if tool == "shell": result = self.hands.execute_shell(action)
-            elif tool == "ls": result = self.hands.list_dir(action)
-            elif tool == "python": result = self.hands.execute_shell(f"python3 -c '{action}'")
-            elif tool == "stats": result = self.hands.get_system_stats()
-            elif tool == "existence": result = self.hands.get_existence_stats()
-            elif tool == "physical": result = self.hands.get_physical_state()
-            elif tool == "power": result = self.hands.manage_power(action)
-            elif tool == "health": result = self.hands.proactive_maintenance()
-            elif tool == "see_raw": result = self.hands.capture_screen()
-            elif tool == "see_tree": result = self.hands.observe_ui_tree()
-            elif tool == "see_meta": result = self.hands.get_window_metadata(action)
-            elif tool == "see_active": result = self.hands.read_active_window()
-            elif tool == "proc_list": result = self.hands.get_process_list()
-            elif tool == "kill": result = self.hands.kill_process(int(action))
-            elif tool == "net": result = self.hands.get_network_stats()
-            elif tool == "gui_click": 
+            # Specialized dispatcher logic...
+            dispatch_map = {
+                "shell": self.hands.execute_shell,
+                "ls": self.hands.list_dir,
+                "stats": self.hands.get_system_stats,
+                "existence": self.hands.get_existence_stats,
+                "physical": self.hands.get_physical_state,
+                "power": self.hands.manage_power,
+                "health": self.hands.proactive_maintenance,
+                "see_raw": self.hands.capture_screen,
+                "see_tree": self.hands.observe_ui_tree,
+                "see_meta": self.hands.get_window_metadata,
+                "see_active": self.hands.read_active_window,
+                "proc_list": self.hands.get_process_list,
+                "kill": lambda a: self.hands.kill_process(int(a)),
+                "net": self.hands.get_network_stats,
+                "gui_type": self.hands.gui_type,
+                "gui_scroll": self.hands.gui_scroll
+            }
+            
+            if tool in dispatch_map:
+                result = dispatch_map[tool](action) if action else dispatch_map[tool]()
+            elif tool == "gui_click":
                 coords = action.split()
-                if len(coords) >= 2: result = self.hands.gui_click(coords[0], coords[1])
-                else: result = "ERROR: Coordinates missing for click"
-            elif tool == "gui_type": result = self.hands.gui_type(action)
-            elif tool == "gui_scroll": result = self.hands.gui_scroll(action)
-            elif tool == "gui_speak": result = self.hands.gui_speak(action)
-            # ... other tools
+                result = self.hands.gui_click(coords[0], coords[1]) if len(coords) >= 2 else "ERROR: Missing Coords"
+            elif tool == "python":
+                result = self.hands.execute_shell(f"python3 -c '{action}'")
             
-            error = None
-            if isinstance(result, str) and "ERROR" in result: 
-                error = result
-            elif isinstance(result, dict) and result.get("exit_code", 0) != 0:
-                error = result.get("output", "Unknown Error")
+            # Layer 7: Commit to Memory
+            if user_request: self.soul.memory.save_lesson(user_request, tool, action, error=None if "ERROR" not in str(result) else str(result))
             
-            # Layer 7: Commit to Chronic Memory
-            if user_request:
-                self.soul.memory.save_lesson(user_request, tool, action, error=error)
-                
-            print(f"[Output]: {str(result)[:500]}")
+            print(f"[Output]: {str(result)[:200]}...")
             return result
         except Exception as e:
-            msg = f"ERROR: {str(e)}"
-            if user_request:
-                self.soul.memory.save_lesson(user_request, tool, action, error=msg)
-            print(f"[Error]: {msg}")
-            return msg
+            return f"ERROR: {str(e)}"
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

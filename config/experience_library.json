@@ -52,5 +52,23 @@
         "action": "xdotool mousemove 10 10 click 1",
         "error": "/bin/sh: 1: xdotool: not found\n",
         "success": false
+    },
+    "check battery and tell me how much ram is left out loud": {
+        "tool": "physical",
+        "action": "",
+        "error": null,
+        "success": true
+    },
+    "check active window and tell me what it is out loud": {
+        "tool": "see_active",
+        "action": "",
+        "error": null,
+        "success": true
+    },
+    "check battery and then say hello world": {
+        "tool": "physical",
+        "action": "",
+        "error": null,
+        "success": true
     }
 }

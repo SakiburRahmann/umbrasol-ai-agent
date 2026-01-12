@@ -8,7 +8,8 @@ class Brain:
         self.model_name = model_name
         self.base_url = f"{base_url}/api/chat"
 
-    def think(self, prompt, system_prompt="You are the Umbrasol Core.", temperature=0.1):
+    def think(self, prompt, system_prompt="You are the Umbrasol Core.", temperature=0.0, stream=False):
+        # Performance Optimizations for Local Hardware
         payload = {
             "model": self.model_name,
             "messages": [
@@ -16,28 +17,40 @@ class Brain:
                 {"role": "user", "content": prompt}
             ],
             "options": {
-                "temperature": temperature
+                "temperature": temperature,
+                "num_thread": 8, # Force multi-core usage
+                "num_ctx": 2048,  # Keep context small for speed
+                "repeat_penalty": 1.2
             },
-            "stream": True # Switch to stream for potential progress tracking
+            "stream": True
         }
         
         try:
             full_content = ""
-            print(f"[{self.model_name}] Thinking...", end="", flush=True)
+            if not stream:
+                print(f"[{self.model_name}] Thinking...", end="", flush=True)
+            
             response = requests.post(self.base_url, json=payload, stream=True)
             response.raise_for_status()
             
-            for line in response.iter_lines():
-                if line:
-                    chunk = json.loads(line)
-                    if not chunk.get("done"):
-                        content = chunk["message"]["content"]
-                        full_content += content
-                        print(".", end="", flush=True) # Simple progress dot
-            print(" Done.")
-            return full_content
+            def generator():
+                nonlocal full_content
+                for line in response.iter_lines():
+                    if line:
+                        chunk = json.loads(line)
+                        if not chunk.get("done"):
+                            content = chunk["message"]["content"]
+                            full_content += content
+                            yield content
+
+            if stream:
+                return generator()
+            else:
+                for content in generator():
+                    print(".", end="", flush=True)
+                print(" Done.")
+                return full_content
         except Exception as e:
-            print(f" Error: {str(e)}")
             return f"ERROR_BRAIN_FAILURE: {str(e)}"
 
 # The Unified-Soul implementation (Monolith-Prime)
@@ -86,74 +99,47 @@ class MonolithSoul:
         if "SEARCH" in category.upper(): return "SEARCH"
         return "LOGICAL"
 
-    def execute_task(self, user_request):
-        """Unified Soul execution: Reasoning + Internal Safety Audit."""
-        # 0. Recall Past Experience (Chronic Memory)
+    def execute_task(self, user_request, callback=None):
+        """Action-First Execution: Get the tool, then think."""
         past = self.memory.get_relevant_lesson(user_request)
-        experience_context = ""
-        if past:
-            experience_context = f"\n[CHRONIC_MEMORY]: Past experience for this task: {past['tool']}({past['action']}). "
-            if not past['success']:
-                experience_context += f"CAUTION: Previous attempt FAILED with: {past['error']}. DO NOT REPEAT."
-            else:
-                experience_context += "SUCCESS: This approach worked."
+        xp = f"XP: {past['tool']}({past['action']})=FAIL" if past and not past['success'] else ""
 
         system_prompt = (
-            "You are Umbrasol-Monolith. Use INTERNAL_TOOLS whenever possible.\n"
-            "INTERNAL_TOOLS:\n"
-            "- physical: battery, thermals, power\n"
-            "- existence: uptime, identity, host-stats\n"
-            "- health: disk-cleanup, system-maintenance\n"
-            "- stats: CPU, RAM usage\n"
-            "- see_active: identify current window/chrome-tab\n"
-            "- see_tree: map all UI buttons/elements on screen\n"
-            "- gui_click: Click at X Y coordinates\n"
-            "- gui_type: Type text into the focused field\n"
-            "- gui_scroll: up|down to move content\n"
-            "- gui_speak: Say text out loud using the speakers\n"
-            "- shell: general linux commands\n"
-            f"{experience_context}\n"
-            "TASK: " + user_request + "\n"
-            "RULE: Output ONLY JSON. NO CHATTER.\n"
-            "{\n"
-            "  \"thought\": \"reasoning\",\n"
-            "  \"tool\": \"tool_name\",\n"
-            "  \"cmd\": \"arg\",\n"
-            "  \"safe\": true\n"
-            "}"
+            "JSON-FIRST. NO TEXT. "
+            "{\"tool\": \"..\", \"cmd\": \"..\", \"thought\": \"..\"}\n"
+            "TOOLS: physical(bat|temp), existence(up|id), stats(cpu|ram), see(act|tree|raw), gui(click|type|scroll|speak), shell(cmd).\n"
+            f"{xp}"
         )
         
-        response_text = self.monolith.think("EXECUTE ONLY.", system_prompt=system_prompt)
+        # Performance payload with 4 threads
+        response_gen = self.monolith.think(user_request, system_prompt=system_prompt, stream=True)
         
-        # Robust JSON Extraction
-        import re
-        import json
+        response_text = ""
+        plans = []
         
-        plan = {}
-        try:
-            # Try finding the last brace-enclosed block (usually the answer)
-            json_match = re.search(r'\{[^{}]*\}', response_text, re.DOTALL)
-            if json_match:
-                plan = json.loads(json_match.group(0))
-        except:
-            # Fallback for Malformed JSON but clear content
-            pass
+        print(f"[{self.model_name}] Velocity-Pulse... ", end="", flush=True)
+        for chunk in response_gen:
+            response_text += chunk
             
-        tool = plan.get("tool", "shell")
-        action = plan.get("cmd", "")
-        reasoning = plan.get("thought", response_text[:100])
-        is_safe = plan.get("safe", True)
-        
-        # Safety normalization
-        assessment = "[SAFE]" if is_safe else "[DANGER]"
-        
-        return {
-            "tool": tool,
-            "proposed_action": action,
-            "reasoning": reasoning,
-            "assessment": assessment,
-            "importance": 5
-        }
+            # EAGER PARSING: Look for the FIRST closed JSON block
+            if "}" in response_text:
+                try:
+                    json_match = re.search(r'\{[^{}]*\}', response_text, re.DOTALL)
+                    if json_match:
+                        plan = json.loads(json_match.group(0))
+                        if "tool" in plan and "cmd" in plan:
+                            if plan not in plans:
+                                plans.append(plan)
+                                if callback: callback(plan) # EXECUTE NOW
+                                print("⚡", end="", flush=True)
+                                # If it's the first action, we can potentially keep going or stop
+                except: pass
+            
+            # Velocity Stop: If we have an action and it starts chatting
+            if len(plans) > 0 and len(response_text) > (len(json.dumps(plans[0])) + 20):
+                break
+
+        return {"actions": plans, "reasoning": response_text[:50]}
 
     def fast_literal_engine(self, user_request):
         """Ultra-fast JSON command generator using 135M model."""

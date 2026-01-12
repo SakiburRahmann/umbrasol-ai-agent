@@ -31,7 +31,7 @@ class Brain:
         }
         
         try:
-            response = requests.post(self.base_url, json=payload, timeout=10)
+            response = requests.post(self.base_url, json=payload, timeout=60)
             response.raise_for_status()
             return response.json().get("response", "")
         except Exception as e:
@@ -47,7 +47,11 @@ class MonolithSoul:
         self.safe_tools = settings.SAFE_TOOLS
 
     def execute_task(self, user_request, context=""):
-        """Minimal AI call with strict safety and Context."""
+        """Decide between Action (Tool Use) or Dialogue (Conversation)."""
+        
+        # Identity Construction
+        system_name = getattr(settings, "SYSTEM_NAME", "Umbrasol")
+        identity = f"You are {system_name}, a digital organism created by Sakibur Rahman. You are helpful, articulate, and autonomous."
         
         # Layer 7: Chronic Memory Retrieval
         lesson = self.memory.get_relevant_lesson(user_request)
@@ -55,34 +59,47 @@ class MonolithSoul:
         if lesson and not lesson.get('success', True):
              xp_context = f"WARNING: Previous attempt failed with '{lesson.get('error')}'. Avoid that."
 
-        # Ultra-compressed prompt
+        # Dual-Path Prompt
         prompt = (
+            f"System: {identity}\n"
             f"Context: {context}\n"
             f"XP: {xp_context}\n"
-            f"Task: {user_request}\n"
-            "Output ONLY: tool,cmd\n"
-            f"Tools: {','.join(self.safe_tools)}\n"
-            "Example: stats,"
+            f"User: {user_request}\n"
+            "INSTRUCTION: If a task requires a tool, output 'ACTION: tool,cmd'. "
+            "If it's a question or conversation, output 'TALK: response'.\n"
+            f"Available Tools: {','.join(self.safe_tools)}\n"
+            "Example 1: ACTION: stats,\n"
+            "Example 2: TALK: I am Umbrasol, your digital organism."
         )
         
-        response = self.monolith.think(prompt, max_tokens=30)
-        
-        # Parse the response
-        parts = response.strip().split(",", 1)
-        tool = parts[0].strip() if len(parts) > 0 else "stats"
-        cmd = parts[1].strip() if len(parts) > 1 else ""
-        
-        # SAFETY CHECK: Only allow whitelisted tools (Centralized)
-        if tool not in self.safe_tools:
-            tool = "stats"
-            cmd = ""
-        
-        # SAFETY CHECK: Block dangerous commands (Centralized)
-        if any(p in cmd.lower() for p in settings.SENSITIVE_PATTERNS):
-            cmd = ""
-        
-        return {
-            "actions": [{"tool": tool, "cmd": cmd}],
-            "reasoning": "Minimal inference",
-            "assessment": "[SAFE]"
-        }
+        # 60s timeout for deep thinking
+        response = self.monolith.think(prompt, system_prompt=identity, max_tokens=150, temperature=0.7)
+        response = response.strip()
+
+        if response.startswith("ACTION:"):
+            # Parse Tool Call
+            parts = response.replace("ACTION:", "").strip().split(",", 1)
+            tool = parts[0].strip() if len(parts) > 0 else "stats"
+            cmd = parts[1].strip() if len(parts) > 1 else ""
+            
+            # Safety
+            if tool not in self.safe_tools: tool = "stats"
+            if any(p in cmd.lower() for p in settings.SENSITIVE_PATTERNS): cmd = ""
+            
+            return {
+                "actions": [{"tool": tool, "cmd": cmd}],
+                "reasoning": "Action Path",
+                "assessment": "[SAFE]"
+            }
+        else:
+            # Parse Conversational response
+            msg = response.replace("TALK:", "").strip()
+            # If AI failed to use the prefix but just talked, fallback to the raw response
+            if not msg: msg = response 
+            
+            return {
+                "actions": [], # No physical action
+                "message": msg,
+                "reasoning": "Conversation Path",
+                "assessment": "[TALK]"
+            }

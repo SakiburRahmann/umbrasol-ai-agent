@@ -67,7 +67,7 @@ class UmbrasolCore:
         req = user_request.lower().strip()
         instant_map = {
             "battery": ("physical", ""), "power": ("physical", ""),
-            "uptime": ("existence", ""), "who am i": ("existence", ""),
+            "uptime": ("existence", ""), 
             "ram": ("stats", ""), "cpu": ("stats", ""), "stats": ("stats", ""),
             "active window": ("see_active", ""), "list files": ("ls", "."),
             "processes": ("proc_list", ""),
@@ -89,7 +89,13 @@ class UmbrasolCore:
         thought = self.soul.execute_task(user_request, context=context_str)
         
         actions = thought.get("actions", [])
-        if not actions:
+        message = thought.get("message", "")
+
+        if not actions and message:
+            print(f"[AI] {message}")
+            if self.voice_mode: self.hands.gui_speak(message)
+            return
+        elif not actions:
             print("[AI] No actions generated.")
             if self.voice_mode: self.hands.gui_speak("I am unsure how to proceed.")
             return

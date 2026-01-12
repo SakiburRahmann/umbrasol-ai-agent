@@ -1,16 +1,17 @@
+# Models & Data (Large Binaries / Sensitive Data)
+models/
+config/habit_memory.json
+config/*.json
+
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 venv/
 .env
+.DS_Store
 
 # Project Specific
 logs/
 *.log
-
-# Models (though Ollama handles them, just in case)
-*.gguf
-*.bin
-# Test Outputs
 today.txt

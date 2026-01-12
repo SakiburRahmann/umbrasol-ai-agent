@@ -1,8 +1,12 @@
 import requests
 import json
 import re
-from profiler import HardwareProfiler
-from experience import ExperienceManager
+try:
+    from core.profiler import HardwareProfiler
+    from core.experience import ExperienceManager
+except ImportError:
+    from profiler import HardwareProfiler
+    from experience import ExperienceManager
 
 class Brain:
     def __init__(self, model_name="qwen2.5:3b", base_url="http://localhost:11434"):

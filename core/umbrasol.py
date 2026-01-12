@@ -1,10 +1,16 @@
 import sys
 import time
 import threading
-from tools import OperatorInterface
-from brain_v2 import MonolithSoul
-from cache import SemanticCache
-from habit import HabitManager
+try:
+    from core.tools import OperatorInterface
+    from core.brain_v2 import MonolithSoul
+    from core.cache import SemanticCache
+    from core.habit import HabitManager
+except ImportError:
+    from tools import OperatorInterface
+    from brain_v2 import MonolithSoul
+    from cache import SemanticCache
+    from habit import HabitManager
 # from internet import Internet # To be integrated in Phase 6.X
 
 class UmbrasolCore:

@@ -18,5 +18,17 @@
     "47cca12f7b176ed3b34e384c788b0270": {
         "tool": "see_active",
         "command": ""
+    },
+    "a70373b031a8d735648a637bc8675779": {
+        "tool": "see_active",
+        "command": "proc_list"
+    },
+    "47d8fc211a76e3bd763f5cefd2a0bf79": {
+        "tool": "stats",
+        "command": ""
+    },
+    "7d882391cd7b47b20e11c037d030ac71": {
+        "tool": "proc_list",
+        "command": "cmd"
     }
 }

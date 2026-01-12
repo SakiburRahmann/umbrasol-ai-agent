@@ -11,13 +11,13 @@ except ImportError as e:
     sys.exit(1)
 
 def main():
-    agent = UmbrasolCore()
-    
     if len(sys.argv) > 1 and sys.argv[1] == "--voice":
         # Voice Mode
+        agent = UmbrasolCore(voice_mode=True)
         agent.listen_loop()
     elif len(sys.argv) > 1:
-        # CLI Command Mode
+        # CLI Command Mode (Voice mode False by default)
+        agent = UmbrasolCore(voice_mode=False)
         command = " ".join(sys.argv[1:])
         agent.execute(command)
     else:

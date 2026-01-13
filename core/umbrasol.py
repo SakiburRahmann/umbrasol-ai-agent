@@ -80,7 +80,7 @@ class UmbrasolCore:
                 # We simply re-execute. In a more complex system, we'd use the checkpoint blob.
                 threading.Thread(target=self.execute, args=(task['request'],), kwargs={'task_id': task['id']}).start()
 
-    def execute(self, user_request, task_id=None):
+    def execute(self, user_request: str, task_id: str | None = None) -> str | None:
         start_time = time.time()
         
         # LAYER 0: PERSISTENCE

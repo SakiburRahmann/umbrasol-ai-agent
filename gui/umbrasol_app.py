@@ -1,6 +1,7 @@
 """
 Umbrasol Flet GUI Application
 Modern cross-platform interface using Flet (Flutter in Python)
+Compatible with Flet 0.80.1
 """
 import flet as ft
 import sys
@@ -22,18 +23,10 @@ class UmbrasolApp:
         
         # Configure page
         self.page.title = "Umbrasol Intelligence"
-        self.page.theme_mode = ft.ThemeMode.DARK
+        self.page.theme_mode = "dark"
         self.page.padding = 0
         self.page.window_width = 1200
         self.page.window_height = 800
-        self.page.window_min_width = 800
-        self.page.window_min_height = 600
-        
-        # Custom dark theme
-        self.page.theme = ft.Theme(
-            color_scheme_seed=ft.colors.INDIGO,
-            use_material3=True,
-        )
         
         # Initialize UI components
         self.setup_ui()
@@ -45,11 +38,11 @@ class UmbrasolApp:
         header = ft.Container(
             content=ft.Row(
                 [
-                    ft.Icon(ft.icons.PSYCHOLOGY, color=ft.colors.INDIGO_400, size=32),
+                    ft.Icon(ft.icons.PSYCHOLOGY, color="#6366f1", size=32),
                     ft.Column(
                         [
-                            ft.Text("Umbrasol", size=20, weight=ft.FontWeight.BOLD),
-                            ft.Text("v12.1 Neural Intelligence", size=11, color=ft.colors.GREY_500),
+                            ft.Text("Umbrasol", size=20, weight="bold"),
+                            ft.Text("v12.1 Neural Intelligence", size=11, color="#9ca3af"),
                         ],
                         spacing=2,
                     ),
@@ -57,21 +50,20 @@ class UmbrasolApp:
                     ft.Container(
                         content=ft.Row(
                             [
-                                ft.Icon(ft.icons.COMPUTER, size=16, color=ft.colors.GREY_600),
-                                ft.Text(sys.platform.upper(), size=12, color=ft.colors.GREY_400),
+                                ft.Icon(ft.icons.COMPUTER, size=16, color="#6b7280"),
+                                ft.Text(sys.platform.upper(), size=12, color="#9ca3af"),
                             ],
                             spacing=8,
                         ),
                         padding=ft.padding.symmetric(horizontal=16, vertical=8),
-                        bgcolor=ft.colors.with_opacity(0.05, ft.colors.WHITE),
+                        bgcolor="#ffffff0d",
                         border_radius=20,
                     ),
                 ],
-                alignment=ft.MainAxisAlignment.START,
             ),
             padding=20,
-            bgcolor=ft.colors.with_opacity(0.02, ft.colors.WHITE),
-            border=ft.border.only(bottom=ft.BorderSide(1, ft.colors.with_opacity(0.1, ft.colors.WHITE))),
+            bgcolor="#ffffff05",
+            border=ft.border.only(bottom=ft.BorderSide(1, "#ffffff1a")),
         )
         
         # Chat messages list
@@ -88,21 +80,21 @@ class UmbrasolApp:
         # Input field
         self.input_field = ft.TextField(
             hint_text="Describe your intent or give a command...",
-            border_color=ft.colors.with_opacity(0.2, ft.colors.WHITE),
-            focused_border_color=ft.colors.INDIGO_400,
+            border_color="#ffffff33",
+            focused_border_color="#6366f1",
             multiline=False,
             on_submit=self.send_message,
             expand=True,
             text_size=14,
-            bgcolor=ft.colors.with_opacity(0.03, ft.colors.WHITE),
+            bgcolor="#ffffff08",
             border_radius=12,
         )
         
         # Send button
         send_btn = ft.IconButton(
             icon=ft.icons.ARROW_UPWARD_ROUNDED,
-            icon_color=ft.colors.BLACK,
-            bgcolor=ft.colors.WHITE,
+            icon_color="#000000",
+            bgcolor="#ffffff",
             on_click=self.send_message,
             tooltip="Send message",
         )
@@ -117,8 +109,8 @@ class UmbrasolApp:
                 spacing=12,
             ),
             padding=20,
-            bgcolor=ft.colors.with_opacity(0.02, ft.colors.WHITE),
-            border=ft.border.only(top=ft.BorderSide(1, ft.colors.with_opacity(0.1, ft.colors.WHITE))),
+            bgcolor="#ffffff05",
+            border=ft.border.only(top=ft.BorderSide(1, "#ffffff1a")),
         )
         
         # Main layout
@@ -129,7 +121,7 @@ class UmbrasolApp:
                     ft.Container(
                         content=self.chat_list,
                         expand=True,
-                        bgcolor=ft.colors.with_opacity(0.01, ft.colors.WHITE),
+                        bgcolor="#ffffff03",
                     ),
                     input_container,
                 ],
@@ -146,15 +138,15 @@ class UmbrasolApp:
         message = ft.Container(
             content=ft.Column(
                 [
-                    ft.Text("You", size=11, weight=ft.FontWeight.BOLD, color=ft.colors.GREY_500),
-                    ft.Text(text, size=14, color=ft.colors.WHITE),
+                    ft.Text("You", size=11, weight="bold", color="#9ca3af"),
+                    ft.Text(text, size=14, color="#ffffff"),
                 ],
                 spacing=4,
             ),
             padding=16,
-            bgcolor=ft.colors.with_opacity(0.05, ft.colors.INDIGO),
+            bgcolor="#6366f10d",
             border_radius=12,
-            border=ft.border.all(1, ft.colors.with_opacity(0.1, ft.colors.INDIGO)),
+            border=ft.border.all(1, "#6366f11a"),
         )
         self.chat_list.controls.append(message)
         self.page.update()
@@ -164,15 +156,15 @@ class UmbrasolApp:
         message = ft.Container(
             content=ft.Column(
                 [
-                    ft.Text("Umbrasol", size=11, weight=ft.FontWeight.BOLD, color=ft.colors.INDIGO_400),
-                    ft.Text(text, size=14, color=ft.colors.GREY_200),
+                    ft.Text("Umbrasol", size=11, weight="bold", color="#6366f1"),
+                    ft.Text(text, size=14, color="#e5e7eb"),
                 ],
                 spacing=4,
             ),
             padding=16,
-            bgcolor=ft.colors.with_opacity(0.03, ft.colors.WHITE),
+            bgcolor="#ffffff08",
             border_radius=12,
-            border=ft.border.all(1, ft.colors.with_opacity(0.05, ft.colors.WHITE)),
+            border=ft.border.all(1, "#ffffff0d"),
         )
         self.chat_list.controls.append(message)
         self.page.update()
@@ -180,7 +172,7 @@ class UmbrasolApp:
     def add_system_message(self, text: str):
         """Add system message to chat"""
         message = ft.Container(
-            content=ft.Text(text, size=12, color=ft.colors.GREY_600, italic=True),
+            content=ft.Text(text, size=12, color="#6b7280", italic=True),
             padding=12,
         )
         self.chat_list.controls.append(message)
@@ -191,8 +183,8 @@ class UmbrasolApp:
         self.thinking = ft.Container(
             content=ft.Row(
                 [
-                    ft.ProgressRing(width=16, height=16, stroke_width=2, color=ft.colors.INDIGO_400),
-                    ft.Text("Processing...", size=12, color=ft.colors.INDIGO_400),
+                    ft.ProgressRing(width=16, height=16, stroke_width=2, color="#6366f1"),
+                    ft.Text("Processing...", size=12, color="#6366f1"),
                 ],
                 spacing=8,
             ),

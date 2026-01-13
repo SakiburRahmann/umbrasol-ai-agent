@@ -1,10 +1,13 @@
 """
-Umbrasol Flet GUI Application
-Simplified version compatible with Flet 0.80.1
+Umbrasol Flet GUI Application v12.2
+Premium Dark Theme | Streaming AI | Markdown Support
+Compatible with Flet 0.80.1
 """
 import flet as ft
 import sys
 import os
+import time
+import psutil
 from threading import Thread
 
 # Add project root to path
@@ -12,206 +15,260 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.umbrasol import UmbrasolCore
 
+# --- THEME CONSTANTS ---
+BG_COLOR = "#0F172A"       # Slate 900
+SURFACE_COLOR = "#1E293B"  # Slate 800
+ACCENT_COLOR = "#6366F1"   # Indigo 500
+TEXT_MAIN = "#F8FAFC"      # Slate 50
+TEXT_MUTED = "#94A3B8"     # Slate 400
+USER_BUBBLE = "#3730A3"    # Indigo 800
+AGENT_BUBBLE = "#334155"   # Slate 700
+BORDER_COLOR = "#334155"   # Slate 700
 
 class UmbrasolApp:
     def __init__(self, page: ft.Page):
         self.page = page
         self.agent = UmbrasolCore(voice_mode=False)
         
-        # Configure page
+        # Configure page basics
         self.page.title = "Umbrasol Intelligence"
         self.page.theme_mode = "dark"
-        self.page.padding = 20
-        self.page.window_width = 1000
-        self.page.window_height = 700
+        self.page.padding = 0
+        self.page.bgcolor = BG_COLOR
+        self.page.window_width = 1200
+        self.page.window_height = 800
+        self.page.window_min_width = 800
+        self.page.window_min_height = 600
         
-        # Initialize UI
+        # UI State
+        self.memory_usage = ft.Text("RAM: --%", size=11, color=ACCENT_COLOR, weight="bold")
+        self.cpu_usage = ft.Text("CPU: --%", size=11, color=ACCENT_COLOR, weight="bold")
+        
         self.setup_ui()
         
+        # Start background stats update
+        Thread(target=self.update_stats, daemon=True).start()
+        
     def setup_ui(self):
-        """Build the UI"""
+        """Build the Premium UI"""
         
-        # Header
-        header = ft.Text(
-            "Umbrasol Intelligence v12.1",
-            size=24,
-            weight="bold",
-            color="#6366f1"
+        # --- HEADER ---
+        header = ft.Container(
+            content=ft.Row(
+                [
+                    # Logo / Title
+                    ft.Row([
+                        ft.Icon(ft.icons.TOKEN, color=ACCENT_COLOR, size=24), # Generic token icon replaces specific abstract ones
+                        ft.Column([
+                            ft.Text("UMBRASOL", size=14, weight="bold", color=TEXT_MAIN, letter_spacing=2),
+                            ft.Text("NEURAL INTERFACE v12.2", size=10, color=TEXT_MUTED),
+                        ], spacing=0)
+                    ], spacing=12),
+                    
+                    ft.Container(expand=True),
+                    
+                    # Telemetry
+                    ft.Container(
+                        content=ft.Row([
+                            ft.Icon(ft.icons.MEMORY, size=14, color=TEXT_MUTED),
+                            self.memory_usage,
+                            ft.Container(width=10),
+                            ft.Icon(ft.icons.COMPUTER, size=14, color=TEXT_MUTED),
+                            self.cpu_usage,
+                        ]),
+                        padding=ft.padding.symmetric(horizontal=12, vertical=6),
+                        bgcolor=SURFACE_COLOR,
+                        border_radius=20,
+                        border=ft.border.all(1, BORDER_COLOR)
+                    )
+                ],
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+            ),
+            padding=ft.padding.symmetric(horizontal=24, vertical=16),
+            bgcolor=BG_COLOR,
+            border=ft.border.only(bottom=ft.BorderSide(1, BORDER_COLOR)),
         )
-        
-        platform_info = ft.Text(
-            f"Platform: {sys.platform.upper()}",
-            size=12,
-            color="#9ca3af"
-        )
-        
-        # Chat area
+
+        # --- CHAT AREA ---
         self.chat_list = ft.ListView(
             expand=True,
-            spacing=10,
-            padding=10,
+            spacing=24,
+            padding=24,
             auto_scroll=True,
         )
         
-        # Welcome message
-        self.add_system_message("System ready. Type your command below.")
-        
-        # Input
+        # --- INPUT AREA ---
         self.input_field = ft.TextField(
-            hint_text="Type your command here...",
+            hint_text="Type your directive...",
+            hint_style=ft.TextStyle(color=TEXT_MUTED),
+            text_style=ft.TextStyle(color=TEXT_MAIN, size=14),
             multiline=False,
             on_submit=self.send_message,
-            border_color="#6366f1",
-            text_size=14,
+            expand=True,
+            border_color="transparent",
+            bgcolor="transparent",
+            content_padding=16,
+            cursor_color=ACCENT_COLOR,
         )
         
-        send_button = ft.ElevatedButton(
-            "Send",
+        send_btn = ft.Container(
+            content=ft.Icon(ft.icons.ARROW_UPWARD, color=TEXT_MAIN, size=20),
+            width=40,
+            height=40,
+            bgcolor=ACCENT_COLOR,
+            border_radius=12,
+            alignment=ft.alignment.center,
             on_click=self.send_message,
-            bgcolor="#6366f1",
-            color="#ffffff",
+            animate=ft.animation.Animation(200, "easeOut"),
         )
-        
-        # Layout
+
+        input_container = ft.Container(
+            content=ft.Row([
+                ft.Container(
+                    content=self.input_field,
+                    expand=True,
+                    bgcolor=SURFACE_COLOR,
+                    border_radius=12,
+                    border=ft.border.all(1, BORDER_COLOR),
+                ),
+                send_btn
+            ], spacing=12),
+            padding=24,
+            bgcolor=BG_COLOR,
+            border=ft.border.only(top=ft.BorderSide(1, BORDER_COLOR)),
+        )
+
+        # --- ASSEMBLY ---
         self.page.add(
             ft.Column(
                 [
                     header,
-                    platform_info,
-                    ft.Divider(height=20, color="#ffffff1a"),
-                    ft.Container(
-                        content=self.chat_list,
-                        expand=True,
-                        bgcolor="#00000033",
-                        padding=10,
-                        border_radius=10,
-                    ),
-                    ft.Row(
-                        [self.input_field, send_button],
-                        spacing=10,
-                    ),
+                    ft.Container(content=self.chat_list, expand=True, bgcolor=BG_COLOR),
+                    input_container
                 ],
-                expand=True,
-                spacing=10,
+                spacing=0,
+                expand=True
             )
         )
         
+        # Welcome
+        self.add_system_message("System Initialized. Ready for input.")
         self.input_field.focus()
-    
-    def add_user_message(self, text: str):
-        """Add user message"""
-        msg = ft.Container(
-            content=ft.Column([
-                ft.Text("You:", size=11, weight="bold", color="#9ca3af"),
-                ft.Text(text, size=13, color="#ffffff"),
-            ], spacing=2),
-            bgcolor="#6366f11a",
-            padding=10,
-            border_radius=8,
-        )
-        self.chat_list.controls.append(msg)
-        self.page.update()
-    
-    def add_agent_message(self, text: str):
-        """Add agent message"""
-        msg = ft.Container(
-            content=ft.Column([
-                ft.Text("Umbrasol:", size=11, weight="bold", color="#6366f1"),
-                ft.Text(text, size=13, color="#e5e7eb"),
-            ], spacing=2),
-            bgcolor="#ffffff0d",
-            padding=10,
-            border_radius=8,
-        )
-        self.chat_list.controls.append(msg)
-        self.page.update()
-    
-    def add_system_message(self, text: str):
-        """Add system message"""
-        msg = ft.Text(text, size=11, color="#6b7280", italic=True)
-        self.chat_list.controls.append(msg)
-        self.page.update()
-    
-    def add_thinking(self):
-        """Add thinking indicator"""
-        self.thinking = ft.Container(
-            content=ft.Row([
-                ft.ProgressRing(width=14, height=14, stroke_width=2),
-                ft.Text("Processing...", size=11, color="#6366f1"),
-            ], spacing=8),
-            padding=8,
-        )
-        self.chat_list.controls.append(self.thinking)
-        self.page.update()
-    
-    def remove_thinking(self):
-        """Remove thinking indicator"""
-        if hasattr(self, 'thinking'):
+
+    def update_stats(self):
+        """Background thread to update telemetry"""
+        while True:
             try:
-                self.chat_list.controls.remove(self.thinking)
+                mem = psutil.virtual_memory().percent
+                cpu = psutil.cpu_percent(interval=None)
+                self.memory_usage.value = f"RAM: {mem}%"
+                self.cpu_usage.value = f"CPU: {cpu}%"
                 self.page.update()
+                time.sleep(2)
             except:
-                pass
-    
-    def send_message(self, e):
-        """Send message"""
-        text = self.input_field.value.strip()
-        if not text:
-            return
+                break
+
+    def add_user_message(self, text: str):
+        """Right-aligned user bubble"""
+        msg = ft.Row([
+            ft.Container(expand=True), # Spacer for right align
+            ft.Container(
+                content=ft.Text(text, color=TEXT_MAIN, size=14),
+                bgcolor=USER_BUBBLE,
+                padding=16,
+                border_radius=ft.border_radius.only(20, 20, 4, 20),
+                constraints=ft.BoxConstraints(max_width=800),
+            ),
+            ft.Container(
+                content=ft.Icon(ft.icons.PERSON, color=TEXT_MUTED, size=24),
+                alignment=ft.alignment.top_center,
+                padding=ft.padding.only(top=8)
+            )
+        ], alignment=ft.MainAxisAlignment.END, spacing=12)
         
-        # 1. Add User Message
-        self.add_user_message(text)
-        self.input_field.value = ""
-        self.page.update()
-        
-        # 2. Create Placeholder for Agent Message
-        # We add an empty agent message first, then stream content into it
-        agent_msg_container = ft.Container(
-            content=ft.Column([
-                ft.Text("Umbrasol:", size=11, weight="bold", color="#6366f1"),
-                ft.Text("", size=13, color="#e5e7eb"), # Empty initially
-            ], spacing=2),
-            bgcolor="#ffffff0d",
-            padding=10,
-            border_radius=8,
-        )
-        self.chat_list.controls.append(agent_msg_container)
+        self.chat_list.controls.append(msg)
         self.page.update()
 
-        # The Text control instance we will update
-        response_text_control = agent_msg_container.content.controls[1]
+    def add_system_message(self, text: str):
+        """Centered system notification"""
+        msg = ft.Row([
+            ft.Container(
+                content=ft.Text(text, color=TEXT_MUTED, size=11, italic=True),
+                padding=8,
+                bgcolor=SURFACE_COLOR,
+                border_radius=12,
+            )
+        ], alignment=ft.MainAxisAlignment.CENTER)
+        self.chat_list.controls.append(msg)
+        self.page.update()
+
+    def add_agent_message_placeholder(self):
+        """Left-aligned agent bubble (placeholder)"""
+        # We use a Markdown control for rich text
+        md_control = ft.Markdown(
+            "",
+            selectable=True,
+            extension_set="github_web",
+            code_theme="atom-one-dark",
+            on_tap_link=lambda e: self.page.launch_url(e.data),
+        )
+        
+        msg = ft.Row([
+            ft.Container(
+                content=ft.Icon(ft.icons.SMART_TOY, color=ACCENT_COLOR, size=24),
+                alignment=ft.alignment.top_center,
+                padding=ft.padding.only(top=8)
+            ),
+            ft.Container(
+                content=md_control,
+                bgcolor=AGENT_BUBBLE,
+                padding=16,
+                border_radius=ft.border_radius.only(20, 20, 20, 4),
+                constraints=ft.BoxConstraints(max_width=800),
+            ),
+            ft.Container(expand=True) # Spacer for left align
+        ], alignment=ft.MainAxisAlignment.START, spacing=12)
+        
+        self.chat_list.controls.append(msg)
+        self.page.update()
+        return md_control
+
+    def send_message(self, e):
+        """Handle send event"""
+        text = self.input_field.value.strip()
+        if not text: return
+        
+        self.input_field.value = ""
+        self.add_user_message(text)
+        
+        # Create placeholder for streaming response
+        response_md_control = self.add_agent_message_placeholder()
         
         def process():
-            self.add_thinking()
             current_text = ""
             
             def on_token(token):
                 nonlocal current_text
                 current_text += token
-                # Update UI in real-time
-                response_text_control.value = current_text
+                response_md_control.value = current_text
                 self.page.update()
-
-            try:
-                # Execute with streaming callback
-                self.agent.execute(text, on_token=on_token)
-                self.remove_thinking()
                 
-                # If no text was generated (e.g. action only), show confirmation
+            try:
+                # Add "Thinking..." temporary state if needed, or just start
+                self.agent.execute(text, on_token=on_token)
+                
                 if not current_text:
-                    response_text_control.value = "Task completed."
+                    response_md_control.value = "_Task completed successfully._"
                     self.page.update()
                     
             except Exception as ex:
-                self.remove_thinking()
-                self.add_system_message(f"Error: {str(ex)}")
+                response_md_control.value = f"**Error executing task:** {str(ex)}"
+                self.page.update()
         
         Thread(target=process, daemon=True).start()
 
-
 def main(page: ft.Page):
     UmbrasolApp(page)
-
 
 if __name__ == "__main__":
     ft.app(target=main)

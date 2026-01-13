@@ -58,7 +58,7 @@ class UmbrasolApp:
                 [
                     # Logo / Title
                     ft.Row([
-                        ft.Icon(ft.icons.TOKEN, color=ACCENT_COLOR, size=24), # Generic token icon replaces specific abstract ones
+                        ft.Icon(name="token", color=ACCENT_COLOR, size=24), # Generic token icon replaces specific abstract ones
                         ft.Column([
                             ft.Text("UMBRASOL", size=14, weight="bold", color=TEXT_MAIN, letter_spacing=2),
                             ft.Text("NEURAL INTERFACE v12.2", size=10, color=TEXT_MUTED),
@@ -70,10 +70,10 @@ class UmbrasolApp:
                     # Telemetry
                     ft.Container(
                         content=ft.Row([
-                            ft.Icon(ft.icons.MEMORY, size=14, color=TEXT_MUTED),
+                            ft.Icon(name="memory", size=14, color=TEXT_MUTED),
                             self.memory_usage,
                             ft.Container(width=10),
-                            ft.Icon(ft.icons.COMPUTER, size=14, color=TEXT_MUTED),
+                            ft.Icon(name="computer", size=14, color=TEXT_MUTED),
                             self.cpu_usage,
                         ]),
                         padding=ft.padding.symmetric(horizontal=12, vertical=6),
@@ -112,7 +112,7 @@ class UmbrasolApp:
         )
         
         send_btn = ft.Container(
-            content=ft.Icon(ft.icons.ARROW_UPWARD, color=TEXT_MAIN, size=20),
+            content=ft.Icon(name="arrow_upward", color=TEXT_MAIN, size=20),
             width=40,
             height=40,
             bgcolor=ACCENT_COLOR,
@@ -180,7 +180,7 @@ class UmbrasolApp:
                 constraints=ft.BoxConstraints(max_width=800),
             ),
             ft.Container(
-                content=ft.Icon(ft.icons.PERSON, color=TEXT_MUTED, size=24),
+                content=ft.Icon(name="person", color=TEXT_MUTED, size=24),
                 alignment=ft.alignment.top_center,
                 padding=ft.padding.only(top=8)
             )
@@ -215,7 +215,7 @@ class UmbrasolApp:
         
         msg = ft.Row([
             ft.Container(
-                content=ft.Icon(ft.icons.SMART_TOY, color=ACCENT_COLOR, size=24),
+                content=ft.Icon(name="smart_toy", color=ACCENT_COLOR, size=24),
                 alignment=ft.alignment.top_center,
                 padding=ft.padding.only(top=8)
             ),

@@ -3,6 +3,8 @@ import sys
 import logging
 import asyncio
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -21,6 +23,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Serve the interface directory
+if os.path.exists("interface"):
+    app.mount("/interface", StaticFiles(directory="interface"), name="interface")
+
+@app.get("/")
+async def get_ui():
+    return FileResponse("interface/index.html")
 
 # Instantiate the Core Agent
 # We disable voice_mode by default for the web UI; users can toggle it.

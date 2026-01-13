@@ -4,273 +4,301 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Umbrasol | Neural Dashboard</title>
+    <title>Umbrasol Intelligence</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@500;700&display=swap"
         rel="stylesheet">
     <style>
+        :root {
+            --bg: #09090b;
+            --surface: #121215;
+            --brand: #6366f1;
+            --border: rgba(255, 255, 255, 0.08);
+            --text-main: #fafafa;
+            --text-dim: #a1a1aa;
+        }
+
         body {
-            background: radial-gradient(circle at center, #1b1b3a 0%, #0a0a14 100%);
-            color: #f0f0f0;
+            background-color: var(--bg);
+            color: var(--text-main);
             font-family: 'Inter', sans-serif;
-            overflow: hidden;
-            height: 100vh;
+            -webkit-font-smoothing: antialiased;
         }
 
-        .glass {
-            background: rgba(255, 255, 255, 0.02);
+        .heading {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .glass-panel {
+            background: rgba(18, 18, 21, 0.6);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 1.25rem;
+            border: 1px solid var(--border);
         }
 
-        .neural-glow {
-            box-shadow: 0 0 30px rgba(99, 102, 241, 0.2);
+        .stream-item {
+            animation: slideIn 0.3s ease-out forwards;
         }
 
-        .heading-font {
-            font-family: 'Orbitron', sans-serif;
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .input-container {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .input-container:focus-within {
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.1);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+        }
+
+        .thinking-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
         }
 
         ::-webkit-scrollbar {
-            width: 4px;
+            width: 5px;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: rgba(99, 102, 241, 0.3);
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 10px;
-        }
-
-        .thought-bubble {
-            border-left: 2px solid #6366f1;
-            padding-left: 1.25rem;
-            margin-bottom: 1.5rem;
-            transition: all 0.3s;
-        }
-
-        .action-bubble {
-            border-left: 2px solid #10b981;
-            padding-left: 1.25rem;
-            margin-bottom: 1.5rem;
-            font-family: monospace;
-            font-size: 0.75rem;
-            color: #10b981;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.4;
-            }
-        }
-
-        .thinking-indicator {
-            animation: pulse 2s infinite;
-        }
-
-        .input-glow:focus {
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
-            border-color: rgba(99, 102, 241, 0.6);
         }
     </style>
 </head>
 
-<body class="flex flex-col p-4 md:p-10">
+<body class="h-screen flex items-center justify-center p-4 md:p-10 select-none">
 
-    <!-- Header Section -->
-    <header class="flex justify-between items-center mb-10">
-        <div>
-            <h1 class="heading-font text-3xl font-bold tracking-[0.2em] text-indigo-400">UMBRASOL</h1>
-            <p class="text-[0.6rem] text-slate-500 uppercase tracking-widest mt-1">Autonomous Neural Intelligence v12.0
-            </p>
-        </div>
-        <div class="flex gap-6 items-center">
-            <div id="conn-status"
-                class="flex items-center gap-2 text-[0.6rem] text-rose-500 font-bold tracking-widest px-4 py-2 glass border-rose-500/20">
-                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                OFFLINE
-            </div>
-            <button id="voice-btn" class="glass p-4 hover:bg-white/5 transition-all">
-                <i data-lucide="mic" class="w-5 h-5 text-indigo-400"></i>
-            </button>
-        </div>
-    </header>
+    <div class="w-full max-w-6xl h-full flex flex-col gap-6">
 
-    <!-- Main Grid -->
-    <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-10 overflow-hidden">
-
-        <!-- Left Sidebar: Telemetry -->
-        <aside class="col-span-1 lg:col-span-3 flex flex-col gap-10 h-full">
-            <div class="glass p-8 flex-1 neural-glow border-indigo-500/10 flex flex-col gap-10">
-                <h3 class="heading-font text-[0.7rem] text-indigo-300 tracking-[0.3em]">Core Telemetry</h3>
-
-                <div class="space-y-8">
-                    <div class="space-y-3">
-                        <div class="flex justify-between text-[0.65rem] uppercase tracking-widest text-slate-400">
-                            <span>Processing Load</span>
-                            <span id="cpu-txt">0%</span>
-                        </div>
-                        <div class="w-full bg-white/5 h-[2px] rounded-full overflow-hidden">
-                            <div id="cpu-bar" class="bg-indigo-500 h-full transition-all duration-1000"
-                                style="width: 0%"></div>
-                        </div>
-                    </div>
-                    <div class="space-y-3">
-                        <div class="flex justify-between text-[0.65rem] uppercase tracking-widest text-slate-400">
-                            <span>Memory Utilization</span>
-                            <span id="ram-txt">0%</span>
-                        </div>
-                        <div class="w-full bg-white/5 h-[2px] rounded-full overflow-hidden">
-                            <div id="ram-bar" class="bg-indigo-400 h-full transition-all duration-1000"
-                                style="width: 0%"></div>
-                        </div>
-                    </div>
+        <!-- Navbar -->
+        <nav class="flex justify-between items-center px-2">
+            <div class="flex items-center gap-4">
+                <div
+                    class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <i data-lucide="brain-circuit" class="w-6 h-6 text-white"></i>
                 </div>
-
-                <div class="mt-auto border-t border-white/5 pt-8 space-y-6">
-                    <div class="flex items-center gap-4 text-xs">
-                        <i data-lucide="cpu" class="w-4 h-4 text-indigo-400/50"></i>
-                        <span id="platform-txt" class="text-slate-300 tracking-wider">Detecting Environment...</span>
-                    </div>
-                    <div class="flex items-center gap-4 text-xs">
-                        <i data-lucide="battery" class="w-4 h-4 text-emerald-400/50"></i>
-                        <span id="battery-txt" class="text-slate-300 tracking-wider">-- %</span>
+                <div>
+                    <h1 class="heading text-lg font-bold tracking-tight">Umbrasol <span
+                            class="text-indigo-400 font-normal">v12.1</span></h1>
+                    <div
+                        class="flex items-center gap-2 text-[10px] uppercase tracking-widest text-zinc-500 font-medium">
+                        <div id="status-dot" class="status-dot bg-zinc-700"></div>
+                        <span id="status-text">Synchronizing...</span>
                     </div>
                 </div>
             </div>
-        </aside>
 
-        <!-- Main Feed: The mind -->
-        <section class="col-span-1 lg:col-span-9 flex flex-col gap-10 h-full overflow-hidden">
-            <div class="glass flex-1 flex flex-col p-10 neural-glow border-indigo-500/10 overflow-hidden">
-                <div class="flex justify-between items-center mb-8">
-                    <h3 class="heading-font text-[0.7rem] text-indigo-300 tracking-[0.3em]">Neural Stream</h3>
-                    <div id="think-indicator"
-                        class="hidden thinking-indicator text-[0.6rem] text-indigo-400 font-bold tracking-[0.4em]">
-                        PROCESSING DIRECTIVE</div>
+            <div
+                class="flex gap-4 items-center h-10 px-4 glass-panel rounded-full text-[11px] text-zinc-400 font-medium">
+                <div class="flex items-center gap-2 pr-4 border-r border-white/5">
+                    <i data-lucide="cpu" class="w-3.5 h-3.5 opacity-50"></i>
+                    <span id="stat-cpu">-- %</span>
                 </div>
-
-                <div id="chat-feed" class="flex-1 overflow-y-auto pr-4 space-y-6 text-sm text-slate-300">
-                    <div class="text-slate-500 text-xs italic tracking-wider">Awaiting neural link...</div>
+                <div class="flex items-center gap-2 pr-4 border-r border-white/5">
+                    <i data-lucide="layers" class="w-3.5 h-3.5 opacity-50"></i>
+                    <span id="stat-ram">-- %</span>
                 </div>
-
-                <!-- Input Footer -->
-                <div class="mt-10 pt-10 border-t border-white/5">
-                    <div class="flex gap-6">
-                        <input id="input-field" type="text"
-                            class="flex-1 glass bg-white/[0.02] border-white/10 rounded-2xl px-8 py-5 outline-none text-sm tracking-wide input-glow transition-all"
-                            placeholder="Enter directive for Umbrasol...">
-                        <button id="send-btn"
-                            class="bg-indigo-600 hover:bg-indigo-500 text-white px-12 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all">
-                            Transmit
-                        </button>
-                    </div>
+                <div class="flex items-center gap-2">
+                    <i data-lucide="monitor" class="w-3.5 h-3.5 opacity-50"></i>
+                    <span id="stat-os" class="uppercase">--</span>
                 </div>
             </div>
-        </section>
+        </nav>
 
-    </main>
+        <!-- Main Interface -->
+        <main class="flex-1 flex flex-col gap-6 overflow-hidden min-h-0">
 
-    <script shadow>
+            <!-- Content Area -->
+            <div class="flex-1 glass-panel rounded-[2rem] p-8 flex flex-col relative overflow-hidden">
+                <div id="stream" class="flex-1 overflow-y-auto space-y-8 pr-4 custom-scrollbar">
+                    <!-- Initial Welcome -->
+                    <div class="stream-item max-w-2xl">
+                        <p class="text-zinc-500 text-sm leading-relaxed">
+                            Umbrasol Intelligence is active. All platform modules (Windows, Linux, Android) are verified
+                            and in a ready state.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Processing Overlay -->
+                <div id="thinking-node"
+                    class="hidden absolute bottom-8 left-1/2 -translate-x-1/2 px-6 py-2 rounded-full glass-panel border-indigo-500/20 flex items-center gap-3">
+                    <div class="thinking-shimmer w-full h-full absolute inset-0 rounded-full opacity-40"></div>
+                    <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
+                    <span class="text-[10px] uppercase tracking-[0.2em] font-bold text-indigo-400">Processing
+                        Directive</span>
+                </div>
+            </div>
+
+            <!-- Input Bar -->
+            <div class="h-20 flex gap-4">
+                <div class="flex-1 input-container rounded-3xl flex items-center px-6 gap-4">
+                    <i data-lucide="command" class="w-5 h-5 text-zinc-500"></i>
+                    <input id="input" type="text"
+                        class="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-zinc-600 tracking-wide"
+                        placeholder="Describe your intent or give a command..." autocomplete="off">
+                </div>
+                <button id="send"
+                    class="w-20 rounded-3xl bg-white text-black hover:bg-zinc-200 flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i data-lucide="arrow-up" class="w-6 h-6"></i>
+                </button>
+                <button id="mic"
+                    class="w-20 rounded-3xl glass-panel hover:bg-white/5 flex items-center justify-center transition-all text-zinc-400">
+                    <i data-lucide="mic" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
         lucide.createIcons();
 
-        const feed = document.getElementById('chat-feed');
-        const input = document.getElementById('input-field');
-        const sendBtn = document.getElementById('send-btn');
-        const thinkTag = document.getElementById('think-indicator');
-        const statusBox = document.getElementById('conn-status');
-        const statusDot = statusBox.querySelector('span');
+        const dom = {
+            input: document.getElementById('input'),
+            send: document.getElementById('send'),
+            stream: document.getElementById('stream'),
+            think: document.getElementById('thinking-node'),
+            statusText: document.getElementById('status-text'),
+            statusDot: document.getElementById('status-dot'),
+            statCpu: document.getElementById('stat-cpu'),
+            statRam: document.getElementById('stat-ram'),
+            statOs: document.getElementById('stat-os')
+        };
 
         let ws = null;
-        let voiceMode = false;
+        let isProcessing = false;
 
         function connect() {
+            const host = window.location.host;
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const host = window.location.hostname || 'localhost';
-            ws = new WebSocket(`${protocol}//${host}:8091/ws/thoughts`);
+            ws = new WebSocket(`${protocol}//${host}/ws/thoughts`);
 
             ws.onopen = () => {
-                statusBox.className = 'flex items-center gap-2 text-[0.6rem] text-emerald-400 font-bold tracking-widest px-4 py-2 glass border-emerald-500/20';
-                statusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500';
-                statusBox.lastChild.textContent = 'CONNECTED';
-                log('Neural synchronization successful.', 'system');
-                pollTelemetry();
+                dom.statusText.innerText = 'Connected';
+                dom.statusDot.classList.remove('bg-zinc-700', 'bg-red-500');
+                dom.statusDot.classList.add('bg-indigo-500');
+                pollStats();
             };
 
             ws.onclose = () => {
-                statusBox.className = 'flex items-center gap-2 text-[0.6rem] text-rose-500 font-bold tracking-widest px-4 py-2 glass border-rose-500/20';
-                statusDot.className = 'w-1.5 h-1.5 rounded-full bg-rose-500';
-                statusBox.lastChild.textContent = 'OFFLINE';
-                setTimeout(connect, 5000);
+                dom.statusText.innerText = 'Neural Link Broken';
+                dom.statusDot.classList.add('bg-red-500');
+                setTimeout(connect, 3000);
             };
 
-            ws.onmessage = (event) => {
-                const msg = JSON.parse(event.data);
-                if (msg.type === 'talk') {
-                    thinkTag.classList.add('hidden');
-                    log(msg.content, 'talk');
-                } else if (msg.type === 'action') {
-                    log(`${msg.actions[0].tool}: ${msg.actions[0].cmd}`, 'action');
-                } else if (msg.type === 'status') {
-                    thinkTag.classList.remove('hidden');
-                } else if (msg.type === 'result') {
-                    log(`Result: ${msg.content}`, 'system');
-                } else if (msg.type === 'done') {
-                    thinkTag.classList.add('hidden');
-                }
+            ws.onmessage = (e) => {
+                const msg = JSON.parse(e.data);
+                handleMessage(msg);
             };
         }
 
-        async function pollTelemetry() {
-            try {
-                const res = await fetch('/health');
-                const data = await res.json();
-                document.getElementById('cpu-val')?.remove(); // cleanup old
-                document.getElementById('cpu-txt').innerText = `${data.telemetry.cpu}%`;
-                document.getElementById('cpu-bar').style.width = `${data.telemetry.cpu}%`;
-                document.getElementById('ram-txt').innerText = `${data.telemetry.ram}%`;
-                document.getElementById('ram-bar').style.width = `${data.telemetry.ram}%`;
-                document.getElementById('battery-txt').innerText = `${data.telemetry.battery}`;
-                document.getElementById('platform-txt').innerText = data.platform.toUpperCase();
-            } finally {
-                setTimeout(pollTelemetry, 5000);
+        function handleMessage(msg) {
+            if (msg.type === 'talk') {
+                createBubble(msg.content, 'agent');
+                toggleProcessing(false);
+            } else if (msg.type === 'action') {
+                createBubble(`${msg.actions[0].tool}: ${msg.actions[0].cmd}`, 'action');
+            } else if (msg.type === 'status') {
+                toggleProcessing(true);
+            } else if (msg.type === 'result') {
+                createBubble(msg.content, 'system');
+            } else if (msg.type === 'done') {
+                toggleProcessing(false);
             }
         }
 
-        function log(text, type) {
+        function createBubble(text, type) {
             const div = document.createElement('div');
-            if (type === 'talk') div.className = 'thought-bubble animate-in fade-in slide-in-from-left duration-500';
-            else if (type === 'action') div.className = 'action-bubble';
-            else div.className = 'text-[0.6rem] text-slate-500 italic tracking-widest mb-4 uppercase';
+            div.className = 'stream-item flex flex-col gap-1';
+            
+            if (type === 'user') {
+                div.innerHTML = `<span class="text-[10px] font-bold text-zinc-600 uppercase tracking-widest ml-1">You</span>
+                                 <p class="text-sm font-medium leading-relaxed">${text}</p>`;
+            } else if (type === 'action') {
+                div.innerHTML = `<div class="flex items-center gap-2 text-indigo-400/80 px-4 py-2 bg-indigo-500/5 rounded-xl border border-indigo-500/10 w-fit">
+                                    <i data-lucide="terminal" class="w-3 h-3"></i>
+                                    <span class="text-[11px] font-mono tracking-wide">${text}</span>
+                                 </div>`;
+            } else if (type === 'system') {
+                div.innerHTML = `<p class="text-[11px] text-zinc-500 italic mt-2">${text}</p>`;
+            } else {
+                div.innerHTML = `<span class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest ml-1">Umbrasol</span>
+                                 <p class="text-sm text-zinc-300 leading-relaxed">${text}</p>`;
+            }
+            
+            dom.stream.appendChild(div);
+            lucide.createIcons();
+            dom.stream.scrollTop = dom.stream.scrollHeight;
+        }
 
-            div.innerText = text;
-            feed.appendChild(div);
-            feed.scrollTop = feed.scrollHeight;
+        function toggleProcessing(show) {
+            isProcessing = show;
+            dom.think.classList.toggle('hidden', !show);
+            dom.send.disabled = show;
+        }
+
+        async function pollStats() {
+            try {
+                const res = await fetch('/health');
+                const data = await res.json();
+                dom.statCpu.innerText = `${data.telemetry.cpu}%`;
+                dom.statRam.innerText = `${data.telemetry.ram}%`;
+                dom.statOs.innerText = data.platform.substring(0, 3);
+            } catch (e) {}
+            setTimeout(pollStats, 5000);
         }
 
         function transmit() {
-            const val = input.value.trim();
-            if (!val || !ws) return;
-            log(`> ${val}`, 'user');
-            ws.send(JSON.stringify({ command: val, voice: voiceMode }));
-            input.value = '';
+            const val = dom.input.value.trim();
+            if (!val || !ws || isProcessing) return;
+            
+            createBubble(val, 'user');
+            ws.send(JSON.stringify({command: val, voice: false}));
+            dom.input.value = '';
         }
 
-        sendBtn.onclick = transmit;
-        input.onkeydown = (e) => e.key === 'Enter' && transmit();
-
-        document.getElementById('voice-btn').onclick = () => {
-            voiceMode = !voiceMode;
-            document.getElementById('voice-btn').classList.toggle('bg-indigo-500/10');
-            document.getElementById('voice-btn').classList.toggle('border-indigo-500/30');
-        };
+        dom.send.onclick = transmit;
+        dom.input.onkeydown = (e) => e.key === 'Enter' && transmit();
+        
+        // Ensure input stays focused for non-technical users
+        window.addEventListener('keydown', (e) => {
+            if (document.activeElement !== dom.input && e.key.length === 1) {
+                dom.input.focus();
+            }
+        });
 
         connect();
     </script>

@@ -25,7 +25,7 @@ def main():
         def open_browser():
             import time
             time.sleep(2)
-            url = f"file://{os.path.abspath('interface/index.html')}"
+            url = "http://localhost:8091"
             print(f"Opening Interface: {url}")
             webbrowser.open(url)
         

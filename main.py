@@ -15,6 +15,23 @@ def main():
         # Voice Mode
         agent = UmbrasolCore(voice_mode=True)
         agent.listen_loop()
+    elif len(sys.argv) > 1 and sys.argv[1] == "--ui":
+        # Web UI Mode
+        print("--- Umbrasol Neural Interface: Initiating ---")
+        import webbrowser
+        from core.api import start_server
+        
+        # Open browser in a separate thread to allow server to start
+        def open_browser():
+            import time
+            time.sleep(2)
+            url = f"file://{os.path.abspath('interface/index.html')}"
+            print(f"Opening Interface: {url}")
+            webbrowser.open(url)
+        
+        import threading
+        threading.Thread(target=open_browser, daemon=True).start()
+        start_server()
     elif len(sys.argv) > 1:
         # CLI Command Mode (Voice mode False by default)
         agent = UmbrasolCore(voice_mode=False)

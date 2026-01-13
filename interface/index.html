@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Umbrasol | Neural Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            background: radial-gradient(circle at center, #1b1b3a 0%, #0a0a14 100%);
+            color: #f0f0f0;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1.25rem;
+        }
+
+        .neural-glow {
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.2);
+        }
+
+        .heading-font {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 10px;
+        }
+
+        .thought-bubble {
+            border-left: 2px solid #6366f1;
+            padding-left: 1.25rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .action-bubble {
+            border-left: 2px solid #10b981;
+            padding-left: 1.25rem;
+            margin-bottom: 1.5rem;
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #10b981;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        .thinking-indicator {
+            animation: pulse 2s infinite;
+        }
+
+        .input-glow:focus {
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+            border-color: rgba(99, 102, 241, 0.6);
+        }
+    </style>
+</head>
+
+<body class="flex flex-col p-4 md:p-10">
+
+    <!-- Header Section -->
+    <header class="flex justify-between items-center mb-10">
+        <div>
+            <h1 class="heading-font text-3xl font-bold tracking-[0.2em] text-indigo-400">UMBRASOL</h1>
+            <p class="text-[0.6rem] text-slate-500 uppercase tracking-widest mt-1">Autonomous Neural Intelligence v12.0
+            </p>
+        </div>
+        <div class="flex gap-6 items-center">
+            <div id="conn-status"
+                class="flex items-center gap-2 text-[0.6rem] text-rose-500 font-bold tracking-widest px-4 py-2 glass border-rose-500/20">
+                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                OFFLINE
+            </div>
+            <button id="voice-btn" class="glass p-4 hover:bg-white/5 transition-all">
+                <i data-lucide="mic" class="w-5 h-5 text-indigo-400"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Grid -->
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-10 overflow-hidden">
+
+        <!-- Left Sidebar: Telemetry -->
+        <aside class="col-span-1 lg:col-span-3 flex flex-col gap-10 h-full">
+            <div class="glass p-8 flex-1 neural-glow border-indigo-500/10 flex flex-col gap-10">
+                <h3 class="heading-font text-[0.7rem] text-indigo-300 tracking-[0.3em]">Core Telemetry</h3>
+
+                <div class="space-y-8">
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-[0.65rem] uppercase tracking-widest text-slate-400">
+                            <span>Processing Load</span>
+                            <span id="cpu-txt">0%</span>
+                        </div>
+                        <div class="w-full bg-white/5 h-[2px] rounded-full overflow-hidden">
+                            <div id="cpu-bar" class="bg-indigo-500 h-full transition-all duration-1000"
+                                style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-[0.65rem] uppercase tracking-widest text-slate-400">
+                            <span>Memory Utilization</span>
+                            <span id="ram-txt">0%</span>
+                        </div>
+                        <div class="w-full bg-white/5 h-[2px] rounded-full overflow-hidden">
+                            <div id="ram-bar" class="bg-indigo-400 h-full transition-all duration-1000"
+                                style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-auto border-t border-white/5 pt-8 space-y-6">
+                    <div class="flex items-center gap-4 text-xs">
+                        <i data-lucide="cpu" class="w-4 h-4 text-indigo-400/50"></i>
+                        <span id="platform-txt" class="text-slate-300 tracking-wider">Detecting Environment...</span>
+                    </div>
+                    <div class="flex items-center gap-4 text-xs">
+                        <i data-lucide="battery" class="w-4 h-4 text-emerald-400/50"></i>
+                        <span id="battery-txt" class="text-slate-300 tracking-wider">-- %</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Feed: The mind -->
+        <section class="col-span-1 lg:col-span-9 flex flex-col gap-10 h-full overflow-hidden">
+            <div class="glass flex-1 flex flex-col p-10 neural-glow border-indigo-500/10 overflow-hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <h3 class="heading-font text-[0.7rem] text-indigo-300 tracking-[0.3em]">Neural Stream</h3>
+                    <div id="think-indicator"
+                        class="hidden thinking-indicator text-[0.6rem] text-indigo-400 font-bold tracking-[0.4em]">
+                        PROCESSING DIRECTIVE</div>
+                </div>
+
+                <div id="chat-feed" class="flex-1 overflow-y-auto pr-4 space-y-6 text-sm text-slate-300">
+                    <div class="text-slate-500 text-xs italic tracking-wider">Awaiting neural link...</div>
+                </div>
+
+                <!-- Input Footer -->
+                <div class="mt-10 pt-10 border-t border-white/5">
+                    <div class="flex gap-6">
+                        <input id="input-field" type="text"
+                            class="flex-1 glass bg-white/[0.02] border-white/10 rounded-2xl px-8 py-5 outline-none text-sm tracking-wide input-glow transition-all"
+                            placeholder="Enter directive for Umbrasol...">
+                        <button id="send-btn"
+                            class="bg-indigo-600 hover:bg-indigo-500 text-white px-12 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all">
+                            Transmit
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script shadow>
+        lucide.createIcons();
+
+        const feed = document.getElementById('chat-feed');
+        const input = document.getElementById('input-field');
+        const sendBtn = document.getElementById('send-btn');
+        const thinkTag = document.getElementById('think-indicator');
+        const statusBox = document.getElementById('conn-status');
+        const statusDot = statusBox.querySelector('span');
+
+        let ws = null;
+        let voiceMode = false;
+
+        function connect() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.hostname || 'localhost';
+            ws = new WebSocket(`${protocol}//${host}:8000/ws/thoughts`);
+
+            ws.onopen = () => {
+                statusBox.className = 'flex items-center gap-2 text-[0.6rem] text-emerald-400 font-bold tracking-widest px-4 py-2 glass border-emerald-500/20';
+                statusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500';
+                statusBox.lastChild.textContent = 'CONNECTED';
+                log('Neural synchronization successful.', 'system');
+                pollTelemetry();
+            };
+
+            ws.onclose = () => {
+                statusBox.className = 'flex items-center gap-2 text-[0.6rem] text-rose-500 font-bold tracking-widest px-4 py-2 glass border-rose-500/20';
+                statusDot.className = 'w-1.5 h-1.5 rounded-full bg-rose-500';
+                statusBox.lastChild.textContent = 'OFFLINE';
+                setTimeout(connect, 5000);
+            };
+
+            ws.onmessage = (event) => {
+                const msg = JSON.parse(event.data);
+                if (msg.type === 'talk') {
+                    thinkTag.classList.add('hidden');
+                    log(msg.content, 'talk');
+                } else if (msg.type === 'action') {
+                    log(`${msg.actions[0].tool}: ${msg.actions[0].cmd}`, 'action');
+                } else if (msg.type === 'status') {
+                    thinkTag.classList.remove('hidden');
+                } else if (msg.type === 'result') {
+                    log(`Result: ${msg.content}`, 'system');
+                } else if (msg.type === 'done') {
+                    thinkTag.classList.add('hidden');
+                }
+            };
+        }
+
+        async function pollTelemetry() {
+            try {
+                const res = await fetch('/health');
+                const data = await res.json();
+                document.getElementById('cpu-val')?.remove(); // cleanup old
+                document.getElementById('cpu-txt').innerText = `${data.telemetry.cpu}%`;
+                document.getElementById('cpu-bar').style.width = `${data.telemetry.cpu}%`;
+                document.getElementById('ram-txt').innerText = `${data.telemetry.ram}%`;
+                document.getElementById('ram-bar').style.width = `${data.telemetry.ram}%`;
+                document.getElementById('battery-txt').innerText = `${data.telemetry.battery}`;
+                document.getElementById('platform-txt').innerText = data.platform.toUpperCase();
+            } finally {
+                setTimeout(pollTelemetry, 5000);
+            }
+        }
+
+        function log(text, type) {
+            const div = document.createElement('div');
+            if (type === 'talk') div.className = 'thought-bubble animate-in fade-in slide-in-from-left duration-500';
+            else if (type === 'action') div.className = 'action-bubble';
+            else div.className = 'text-[0.6rem] text-slate-500 italic tracking-widest mb-4 uppercase';
+
+            div.innerText = text;
+            feed.appendChild(div);
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        function transmit() {
+            const val = input.value.trim();
+            if (!val || !ws) return;
+            log(`> ${val}`, 'user');
+            ws.send(JSON.stringify({ command: val, voice: voiceMode }));
+            input.value = '';
+        }
+
+        sendBtn.onclick = transmit;
+        input.onkeydown = (e) => e.key === 'Enter' && transmit();
+
+        document.getElementById('voice-btn').onclick = () => {
+            voiceMode = !voiceMode;
+            document.getElementById('voice-btn').classList.toggle('bg-indigo-500/10');
+            document.getElementById('voice-btn').classList.toggle('border-indigo-500/30');
+        };
+
+        connect();
+    </script>
+</body>
+
+</html>

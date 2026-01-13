@@ -329,6 +329,17 @@ class WindowsHands(BaseHands):
         res = self.execute_shell(script)
         return res.get("output", "UNKNOWN").strip() or "Desktop"
 
+    def ocr_screen(self):
+        """OCR for Windows. Uses capture_screen + tesseract if available."""
+        try:
+            if not shutil.which("tesseract"): return "ERROR: tesseract missing on Windows."
+            self.capture_screen()
+            path = f"logs/ocr_temp.png" # Assuming last screen saved here or we fix capture_screen to return path
+            # For now, we mock the path since capture_screen logic is separate
+            res = self.execute_shell(f"tesseract logs/win_shot_latest.png stdout")
+            return res.get("output", "OCR: No text detected.")
+        except Exception as e: return f"ERROR: Windows OCR failed: {e}"
+
     def get_process_list(self):
         try:
             return [{"pid": p.pid, "name": p.name(), "cpu": p.cpu_percent(), "mem": p.memory_percent()} for p in psutil.process_iter()][:15]
@@ -383,12 +394,12 @@ class WindowsHands(BaseHands):
         try:
             from PIL import ImageGrab
             timestamp = int(time.time())
-            filename = f"logs/screenshot_{timestamp}.png"
+            filename = f"logs/win_shot_latest.png"
             ImageGrab.grab().save(filename)
             return f"SUCCESS: Windows screenshot saved to {filename}"
         except Exception as e:
             # PowerShell fallback if Pillow is missing
-            filename = f"logs/win_shot_{int(time.time())}.png"
+            filename = f"logs/win_shot_latest.png"
             script = f"Add-Type -AssemblyName System.Windows.Forms, System.Drawing; $Screen = [System.Windows.Forms.Screen]::PrimaryScreen; $Bitmap = New-Object System.Drawing.Bitmap $Screen.Bounds.Width, $Screen.Bounds.Height; $Graphics = [System.Drawing.Graphics]::FromImage($Bitmap); $Graphics.CopyFromScreen($Screen.Bounds.X, $Screen.Bounds.Y, 0, 0, $Bitmap.Size); $Bitmap.Save('{filename}'); $Graphics.Dispose(); $Bitmap.Dispose()"
             self.execute_shell(script)
             return f"SUCCESS: Native Windows capture saved to {filename}"
@@ -521,7 +532,7 @@ class AndroidHands(BaseHands):
         return f"ERROR: Action {action} unsupported or requires root."
 
     def get_startup_items(self): return "Execute: ls ~/.termux/boot"
-    def manage_service(self): return "Android services use 'sv' or 'am startservice'."
+    def manage_service(self, name, action="status"): return f"Android service {action} for {name} (Requires su am/sv)."
     
     def control_network(self, interface, state):
         if shutil.which("termux-wifi-enable"):

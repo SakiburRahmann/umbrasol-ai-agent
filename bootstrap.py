@@ -2,7 +2,6 @@ import os
 import sys
 import shutil
 import subprocess
-import subprocess
 
 # Auto-install psutil for sensing
 try:

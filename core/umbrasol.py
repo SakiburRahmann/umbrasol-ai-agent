@@ -4,27 +4,13 @@ import time
 import threading
 import logging
 
-# Standardize path for relative imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-try:
-    from core.tools import OperatorInterface
-    from core.brain_v2 import MonolithSoul
-    from core.cache import SemanticCache
-    from core.habit import HabitManager
-    from core.omega_memory import OmegaMemory
-    from core.omega_safety import OmegaSafety
-    from config import settings
-except ImportError:
-    from tools import OperatorInterface
-    from brain_v2 import MonolithSoul
-    from cache import SemanticCache
-    from habit import HabitManager
-    from omega_memory import OmegaMemory
-    from omega_safety import OmegaSafety
-    import sys
-    sys.path.append(os.getcwd())
-    from config import settings
+from core.tools import OperatorInterface
+from core.brain_v2 import MonolithSoul
+from core.cache import SemanticCache
+from core.habit import HabitManager
+from core.omega_memory import OmegaMemory
+from core.omega_safety import OmegaSafety
+from config import settings
 
 # Configure Logging
 logging.basicConfig(
@@ -126,13 +112,7 @@ class UmbrasolCore:
 
         # LAYER 4: INSTANT HEURISTICS
         req = user_request.lower().strip()
-        instant_map = {
-            "battery": ("physical", ""), "power": ("physical", ""),
-            "uptime": ("existence", ""), 
-            "ram": ("stats", ""), "cpu": ("stats", ""), "stats": ("stats", ""),
-            "active window": ("see_active", ""), "list files": ("ls", "."),
-            "processes": ("proc_list", ""),
-        }
+        instant_map = getattr(settings, "INSTANT_MAP", {})
         
         for key, (tool, cmd) in instant_map.items():
             if key in req:

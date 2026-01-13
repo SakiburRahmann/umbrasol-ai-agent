@@ -1,15 +1,8 @@
 import requests
 import json
-try:
-    from core.profiler import HardwareProfiler
-    from core.experience import ExperienceManager
-    from config import settings
-except ImportError:
-    from profiler import HardwareProfiler
-    from experience import ExperienceManager
-    class settings: 
-        SAFE_TOOLS = {"physical", "existence", "stats", "see_active", "ls"}
-        SENSITIVE_PATTERNS = ["rm ", "sudo", "dd "]
+from core.profiler import HardwareProfiler
+from core.experience import ExperienceManager
+from config import settings
 
 class Brain:
     def __init__(self, model_name="qwen2.5:3b", base_url="http://localhost:11434"):

@@ -37,7 +37,19 @@ SENSITIVE_PATTERNS = [
     "apt ", "pip install", "python -m pip", "wget", "curl", "kill "
 ]
 
+# Heuristic Mapping (0.00ms Instant Commands)
+INSTANT_MAP = {
+    "battery": ("physical", ""), "power": ("physical", ""),
+    "uptime": ("existence", ""), 
+    "ram": ("stats", ""), "cpu": ("stats", ""), "stats": ("stats", ""),
+    "active window": ("see_active", ""), "list files": ("ls", "."),
+    "processes": ("proc_list", ""),
+}
+
+# Tool Whitelist
 SAFE_TOOLS = {
     "physical", "existence", "stats", "see_active", "see_tree", 
-    "see_raw", "proc_list", "net", "gui_speak", "ls"
+    "see_raw", "proc_list", "net", "gui_speak", "ls",
+    "gpu", "power", "startup", "shell", "service", 
+    "gui_click", "gui_type", "gui_scroll"
 }

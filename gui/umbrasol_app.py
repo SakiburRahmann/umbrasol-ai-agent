@@ -1,13 +1,11 @@
 """
 Umbrasol Flet GUI Application
-Modern cross-platform interface using Flet (Flutter in Python)
-Compatible with Flet 0.80.1
+Simplified version compatible with Flet 0.80.1
 """
 import flet as ft
 import sys
 import os
 from threading import Thread
-from queue import Queue
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -19,214 +17,166 @@ class UmbrasolApp:
     def __init__(self, page: ft.Page):
         self.page = page
         self.agent = UmbrasolCore(voice_mode=False)
-        self.message_queue = Queue()
         
         # Configure page
         self.page.title = "Umbrasol Intelligence"
         self.page.theme_mode = "dark"
-        self.page.padding = 0
-        self.page.window_width = 1200
-        self.page.window_height = 800
+        self.page.padding = 20
+        self.page.window_width = 1000
+        self.page.window_height = 700
         
-        # Initialize UI components
+        # Initialize UI
         self.setup_ui()
         
     def setup_ui(self):
-        """Build the main UI layout"""
+        """Build the UI"""
         
         # Header
-        header = ft.Container(
-            content=ft.Row(
-                [
-                    ft.Icon(ft.icons.PSYCHOLOGY, color="#6366f1", size=32),
-                    ft.Column(
-                        [
-                            ft.Text("Umbrasol", size=20, weight="bold"),
-                            ft.Text("v12.1 Neural Intelligence", size=11, color="#9ca3af"),
-                        ],
-                        spacing=2,
-                    ),
-                    ft.Container(expand=True),
-                    ft.Container(
-                        content=ft.Row(
-                            [
-                                ft.Icon(ft.icons.COMPUTER, size=16, color="#6b7280"),
-                                ft.Text(sys.platform.upper(), size=12, color="#9ca3af"),
-                            ],
-                            spacing=8,
-                        ),
-                        padding=ft.padding.symmetric(horizontal=16, vertical=8),
-                        bgcolor="#ffffff0d",
-                        border_radius=20,
-                    ),
-                ],
-            ),
-            padding=20,
-            bgcolor="#ffffff05",
-            border=ft.border.only(bottom=ft.BorderSide(1, "#ffffff1a")),
+        header = ft.Text(
+            "Umbrasol Intelligence v12.1",
+            size=24,
+            weight="bold",
+            color="#6366f1"
         )
         
-        # Chat messages list
+        platform_info = ft.Text(
+            f"Platform: {sys.platform.upper()}",
+            size=12,
+            color="#9ca3af"
+        )
+        
+        # Chat area
         self.chat_list = ft.ListView(
             expand=True,
-            spacing=16,
-            padding=20,
+            spacing=10,
+            padding=10,
             auto_scroll=True,
         )
         
-        # Add welcome message
-        self.add_system_message("Umbrasol Intelligence is active. All platform modules verified and ready.")
+        # Welcome message
+        self.add_system_message("System ready. Type your command below.")
         
-        # Input field
+        # Input
         self.input_field = ft.TextField(
-            hint_text="Describe your intent or give a command...",
-            border_color="#ffffff33",
-            focused_border_color="#6366f1",
+            hint_text="Type your command here...",
             multiline=False,
             on_submit=self.send_message,
-            expand=True,
+            border_color="#6366f1",
             text_size=14,
-            bgcolor="#ffffff08",
-            border_radius=12,
         )
         
-        # Send button
-        send_btn = ft.IconButton(
-            icon=ft.icons.ARROW_UPWARD_ROUNDED,
-            icon_color="#000000",
-            bgcolor="#ffffff",
+        send_button = ft.ElevatedButton(
+            "Send",
             on_click=self.send_message,
-            tooltip="Send message",
+            bgcolor="#6366f1",
+            color="#ffffff",
         )
         
-        # Input container
-        input_container = ft.Container(
-            content=ft.Row(
-                [
-                    self.input_field,
-                    send_btn,
-                ],
-                spacing=12,
-            ),
-            padding=20,
-            bgcolor="#ffffff05",
-            border=ft.border.only(top=ft.BorderSide(1, "#ffffff1a")),
-        )
-        
-        # Main layout
+        # Layout
         self.page.add(
             ft.Column(
                 [
                     header,
+                    platform_info,
+                    ft.Divider(height=20, color="#ffffff1a"),
                     ft.Container(
                         content=self.chat_list,
                         expand=True,
-                        bgcolor="#ffffff03",
+                        bgcolor="#00000033",
+                        padding=10,
+                        border_radius=10,
                     ),
-                    input_container,
+                    ft.Row(
+                        [self.input_field, send_button],
+                        spacing=10,
+                    ),
                 ],
-                spacing=0,
                 expand=True,
+                spacing=10,
             )
         )
         
-        # Focus input field
         self.input_field.focus()
     
     def add_user_message(self, text: str):
-        """Add user message to chat"""
-        message = ft.Container(
-            content=ft.Column(
-                [
-                    ft.Text("You", size=11, weight="bold", color="#9ca3af"),
-                    ft.Text(text, size=14, color="#ffffff"),
-                ],
-                spacing=4,
-            ),
-            padding=16,
-            bgcolor="#6366f10d",
-            border_radius=12,
-            border=ft.border.all(1, "#6366f11a"),
+        """Add user message"""
+        msg = ft.Container(
+            content=ft.Column([
+                ft.Text("You:", size=11, weight="bold", color="#9ca3af"),
+                ft.Text(text, size=13, color="#ffffff"),
+            ], spacing=2),
+            bgcolor="#6366f11a",
+            padding=10,
+            border_radius=8,
         )
-        self.chat_list.controls.append(message)
+        self.chat_list.controls.append(msg)
         self.page.update()
     
     def add_agent_message(self, text: str):
-        """Add agent response to chat"""
-        message = ft.Container(
-            content=ft.Column(
-                [
-                    ft.Text("Umbrasol", size=11, weight="bold", color="#6366f1"),
-                    ft.Text(text, size=14, color="#e5e7eb"),
-                ],
-                spacing=4,
-            ),
-            padding=16,
-            bgcolor="#ffffff08",
-            border_radius=12,
-            border=ft.border.all(1, "#ffffff0d"),
+        """Add agent message"""
+        msg = ft.Container(
+            content=ft.Column([
+                ft.Text("Umbrasol:", size=11, weight="bold", color="#6366f1"),
+                ft.Text(text, size=13, color="#e5e7eb"),
+            ], spacing=2),
+            bgcolor="#ffffff0d",
+            padding=10,
+            border_radius=8,
         )
-        self.chat_list.controls.append(message)
+        self.chat_list.controls.append(msg)
         self.page.update()
     
     def add_system_message(self, text: str):
-        """Add system message to chat"""
-        message = ft.Container(
-            content=ft.Text(text, size=12, color="#6b7280", italic=True),
-            padding=12,
-        )
-        self.chat_list.controls.append(message)
+        """Add system message"""
+        msg = ft.Text(text, size=11, color="#6b7280", italic=True)
+        self.chat_list.controls.append(msg)
         self.page.update()
     
-    def add_thinking_indicator(self):
+    def add_thinking(self):
         """Add thinking indicator"""
         self.thinking = ft.Container(
-            content=ft.Row(
-                [
-                    ft.ProgressRing(width=16, height=16, stroke_width=2, color="#6366f1"),
-                    ft.Text("Processing...", size=12, color="#6366f1"),
-                ],
-                spacing=8,
-            ),
-            padding=12,
+            content=ft.Row([
+                ft.ProgressRing(width=14, height=14, stroke_width=2),
+                ft.Text("Processing...", size=11, color="#6366f1"),
+            ], spacing=8),
+            padding=8,
         )
         self.chat_list.controls.append(self.thinking)
         self.page.update()
     
-    def remove_thinking_indicator(self):
+    def remove_thinking(self):
         """Remove thinking indicator"""
-        if hasattr(self, 'thinking') and self.thinking in self.chat_list.controls:
-            self.chat_list.controls.remove(self.thinking)
-            self.page.update()
+        if hasattr(self, 'thinking'):
+            try:
+                self.chat_list.controls.remove(self.thinking)
+                self.page.update()
+            except:
+                pass
     
     def send_message(self, e):
-        """Handle message send"""
+        """Send message"""
         text = self.input_field.value.strip()
         if not text:
             return
         
-        # Add user message
         self.add_user_message(text)
         self.input_field.value = ""
         self.page.update()
         
-        # Process in background thread
         def process():
-            self.add_thinking_indicator()
+            self.add_thinking()
             try:
-                # Execute command through Umbrasol
                 response = self.agent.execute(text)
-                self.remove_thinking_indicator()
-                self.add_agent_message(response if response else "Task completed.")
+                self.remove_thinking()
+                self.add_agent_message(response if response else "Done.")
             except Exception as ex:
-                self.remove_thinking_indicator()
+                self.remove_thinking()
                 self.add_system_message(f"Error: {str(ex)}")
         
         Thread(target=process, daemon=True).start()
 
 
 def main(page: ft.Page):
-    """Main entry point for Flet app"""
     UmbrasolApp(page)
 
 

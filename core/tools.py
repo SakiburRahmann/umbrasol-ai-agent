@@ -317,46 +317,68 @@ class WindowsHands(BaseHands):
         return {"cpu_total": psutil.cpu_percent(), "ram": psutil.virtual_memory().percent, "disk": psutil.disk_usage(self.cwd).percent}
 
     def read_active_window(self):
-        # Requires pywin32
-        return "UNKNOWN (Requires pywin32)"
+        # Native PowerShell/user32.dll approach
+        script = """
+        $signature = '[DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow(); [DllImport("user32.dll")] public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);'
+        $type = Add-Type -MemberDefinition $signature -Name "Win32Utils" -Namespace "Win32" -PassThru -Using System.Text
+        $hwnd = $type::GetForegroundWindow()
+        $sb = New-Object System.Text.StringBuilder(256)
+        $type::GetWindowText($hwnd, $sb, $sb.Capacity) | Out-Null
+        $sb.ToString()
+        """
+        res = self.execute_shell(script)
+        return res.get("output", "UNKNOWN").strip() or "Desktop"
 
     def get_process_list(self):
         try:
-            # Use tasklist as fallback if psutil fails
-            res = subprocess.run(["tasklist", "/FO", "CSV"], capture_output=True, text=True)
-            return res.stdout
+            return [{"pid": p.pid, "name": p.name(), "cpu": p.cpu_percent(), "mem": p.memory_percent()} for p in psutil.process_iter()][:15]
         except:
-            procs = []
-            for proc in psutil.process_iter(['pid', 'name']): procs.append(proc.info)
-            return procs[:10]
+            res = self.execute_shell("Get-Process | Select-Object Id, ProcessName, CPU, WorkingSet | ConvertTo-Json")
+            return res.get("output", "ERROR: Could not fetch process list")
 
-    def suspend_process(self, pid): return f"ERROR: Windows Suspend not native. Try: pssuspend {pid}"
-    def resume_process(self, pid): return f"ERROR: Windows Resume not native. Try: psresume {pid}"
-    def check_zombies(self): return "Windows uses different process states; no traditional zombies."
+    def suspend_process(self, pid):
+        return self.execute_shell(f"(Get-Process -Id {pid}).Suspend()")
+    def resume_process(self, pid):
+        return self.execute_shell(f"(Get-Process -Id {pid}).Resume()")
+    def check_zombies(self): return "Windows does not have traditional POSIX zombies."
+    
     def get_gpu_stats(self):
         try:
-            res = subprocess.run(["wmic", "path", "win32_VideoController", "get", "name,AdapterRAM"], capture_output=True, text=True)
-            return res.stdout.strip()
+            res = self.execute_shell("Get-CimInstance Win32_VideoController | Select-Object Name, AdapterRAM | ConvertTo-Json")
+            return res.get("output", "N/A")
         except: return "N/A"
+
     def power_control(self, action):
-        cmds = {"reboot": "shutdown /r /t 0", "shutdown": "shutdown /s /t 0", "sleep": "rundll32.exe powrprof.dll,SetSuspendState 0,1,0"}
-        if action in cmds: os.system(cmds[action]); return f"SUCCESS: Executive Windows {action} initiated."
+        cmds = {"reboot": "Restart-Computer -Force", "shutdown": "Stop-Computer -Force", "sleep": "rundll32.exe powrprof.dll,SetSuspendState 0,1,0"}
+        if action in cmds:
+            self.execute_shell(cmds[action])
+            return f"SUCCESS: Executive Windows {action} initiated."
         return f"ERROR: Action {action} unsupported on Windows."
 
     def get_startup_items(self):
-        try:
-            res = subprocess.run(["wmic", "startup", "get", "caption,command"], capture_output=True, text=True)
-            return res.stdout
-        except: return "Check Registry: HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+        res = self.execute_shell("Get-CimInstance Win32_StartupCommand | Select-Object Name, Command | ConvertTo-Json")
+        return res.get("output", "N/A")
 
     def manage_service(self, name, action="status"):
-        cmd = {"status": "query", "start": "start", "stop": "stop"}.get(action, "query")
-        res = subprocess.run(["sc", cmd, name], capture_output=True, text=True)
-        return res.stdout
-    def control_network(self, interface, state): return "Requires netsh"
-    def observe_ui_tree(self): return "Requires accessibility APIs"
+        cmd = f"Get-Service -Name {name} | Select-Object Status, DisplayName | ConvertTo-Json" if action == "status" else f"{action}-Service -Name {name}"
+        res = self.execute_shell(cmd)
+        return res.get("output", str(res))
+
+    def control_network(self, interface, state):
+        cmd = f"Disable-NetAdapter -Name '{interface}' -Confirm:$false" if state == "down" else f"Enable-NetAdapter -Name '{interface}' -Confirm:$false"
+        return self.execute_shell(cmd)
+
+    def observe_ui_tree(self):
+        # UI Automation is complex in PowerShell but possible
+        script = "Add-Type -AssemblyName UIAutomationClient; [System.Windows.Automation.AutomationElement]::RootElement.FindAll([System.Windows.Automation.TreeScope]::Children, [System.Windows.Automation.Condition]::TrueCondition) | Select-Object Current"
+        res = self.execute_shell(script)
+        return res.get("output", "ERROR: UI Tree access restricted.")
+
     def get_network_stats(self): return psutil.net_io_counters()._asdict()
-    def list_dir(self, path="."): return "\n".join(os.listdir(path))
+    def list_dir(self, path="."):
+        res = self.execute_shell(f"Get-ChildItem -Path '{path}' | Select-Object Name | ConvertTo-Json")
+        return res.get("output", str(os.listdir(path)))
+
     def capture_screen(self):
         try:
             from PIL import ImageGrab
@@ -364,16 +386,48 @@ class WindowsHands(BaseHands):
             filename = f"logs/screenshot_{timestamp}.png"
             ImageGrab.grab().save(filename)
             return f"SUCCESS: Windows screenshot saved to {filename}"
-        except Exception as e: return f"ERROR: Windows capture failed: {e}"
+        except Exception as e:
+            # PowerShell fallback if Pillow is missing
+            filename = f"logs/win_shot_{int(time.time())}.png"
+            script = f"Add-Type -AssemblyName System.Windows.Forms, System.Drawing; $Screen = [System.Windows.Forms.Screen]::PrimaryScreen; $Bitmap = New-Object System.Drawing.Bitmap $Screen.Bounds.Width, $Screen.Bounds.Height; $Graphics = [System.Drawing.Graphics]::FromImage($Bitmap); $Graphics.CopyFromScreen($Screen.Bounds.X, $Screen.Bounds.Y, 0, 0, $Bitmap.Size); $Bitmap.Save('{filename}'); $Graphics.Dispose(); $Bitmap.Dispose()"
+            self.execute_shell(script)
+            return f"SUCCESS: Native Windows capture saved to {filename}"
+
+    def gui_click(self, x, y):
+        script = f"""
+        $signature = '[DllImport("user32.dll")] public static extern void mouse_event(int dwFlags, int dx, int dy, int dwData, int dwExtraInfo); [DllImport("user32.dll")] public static extern void SetCursorPos(int x, int y);'
+        $type = Add-Type -MemberDefinition $signature -Name "MouseUtils" -Namespace "Win32" -PassThru
+        $type::SetCursorPos({x}, {y})
+        $type::mouse_event(0x0002, 0, 0, 0, 0) # Left Down
+        $type::mouse_event(0x0004, 0, 0, 0, 0) # Left Up
+        """
+        self.execute_shell(script)
+        return f"SUCCESS: Clicked ({x},{y})"
+
+    def gui_type(self, text):
+        script = f"[System.Windows.Forms.SendKeys]::SendWait('{text}')"
+        self.execute_shell(script)
+        return "SUCCESS: Typed"
+
+    def gui_scroll(self, direction):
+        amount = -120 if direction == "down" else 120
+        script = f"""
+        $signature = '[DllImport("user32.dll")] public static extern void mouse_event(int dwFlags, int dx, int dy, int dwData, int dwExtraInfo);'
+        Add-Type -MemberDefinition $signature -Name "MouseScroll" -Namespace "Win32"
+        [Win32.MouseScroll]::mouse_event(0x0800, 0, 0, {amount}, 0)
+        """
+        self.execute_shell(script)
+        return f"SUCCESS: Scrolled {direction}"
 
     def gui_speak(self, text):
-        # Fallback to powershell SAPI.Say if no other engine
-        cmd = f'Add-Type -AssemblyName System.speech; $speak = New-Object System.Speech.Synthesis.SpeechSynthesizer; $speak.Speak("{text}")'
+        # Use SAPI.SpVoice via PowerShell
+        cmd = f'$speak = New-Object -ComObject SAPI.SpVoice; $speak.Speak("{text}")'
         subprocess.Popen(["powershell", "-Command", cmd], stderr=subprocess.DEVNULL)
         return "SUCCESS: Windows Vocal initiated"
 
     def stop_speaking(self):
-        subprocess.run(["powershell", "-Command", "Get-Process | Where-Object {$_.ProcessName -like '*powershell*'} | Stop-Process"], stderr=subprocess.DEVNULL)
+        # Kill any powershell processes that might be speaking
+        subprocess.run(["powershell", "-Command", "Get-Process | Where-Object {$_.ProcessName -like '*powershell*'} | Stop-Process -Force"], stderr=subprocess.DEVNULL)
         return "SUCCESS"
 
 class AndroidHands(BaseHands):
@@ -427,44 +481,84 @@ class AndroidHands(BaseHands):
 
     def read_active_window(self):
         try:
-            # Android termux-api can't easily see windows, but we can see the foreground app pkg
+            # Android termux-api can't easily see windows, but we can see the foreground app pkg if root
+            res = self.execute_shell("su -c dumpsys window windows | grep -E 'mCurrentFocus|mFocusedApp'")
+            if res.get("exit_code") == 0: return res["output"].strip()
+            
             res = subprocess.run("termux-telephony-deviceinfo", shell=True, capture_output=True, text=True)
             return f"Android Device | Model: {res.stdout.strip()}"
         except: return "Android Device (Foreground Unknown)"
 
-    def ocr_screen(self): return "ERROR: Requires tesseract in Termux. Run: pkg install tesseract"
+    def ocr_screen(self):
+        """OCR for Android using termux-screenshot + tesseract."""
+        try:
+            if not shutil.which("tesseract"): return "ERROR: tesseract missing. Run: pkg install tesseract"
+            path = "logs/android_ocr.png"
+            self.capture_screen() # This saves to logs/android_shot.png
+            shutil.copy("logs/android_shot.png", path)
+            
+            res = subprocess.run(f"tesseract {path} stdout", shell=True, capture_output=True, text=True)
+            return res.stdout if res.stdout.strip() else "OCR: No text detected."
+        except Exception as e: return f"ERROR: OCR failed: {e}"
+
     def get_process_list(self):
         try:
-            res = subprocess.run(["ps", "-A"], capture_output=True, text=True)
-            return res.stdout[:500] 
-        except: return "ERROR: ps failed"
+            return [{"pid": p.pid, "name": p.name(), "mem": p.memory_percent()} for p in psutil.process_iter()][:10]
+        except:
+            res = self.execute_shell("ps -e")
+            return res.get("output", "ERROR: ps failed")
 
-    def suspend_process(self, pid): return "ERROR: Requires Root (kill -STOP)"
-    def resume_process(self, pid): return "ERROR: Requires Root (kill -CONT)"
-    def check_zombies(self): return "NONE (Termux scoped)"
+    def suspend_process(self, pid): return self.execute_shell(f"su -c kill -STOP {pid}")
+    def resume_process(self, pid): return self.execute_shell(f"su -c kill -CONT {pid}")
+    def check_zombies(self): return "No zombie tracking in Android scoped."
     def get_gpu_stats(self): return "N/A (Mobile GPU restricted)"
-    def power_control(self, action): return "ERROR: Shutdown/Reboot requires Root or termux-api notification trigger"
+    
+    def power_control(self, action):
+        cmds = {"reboot": "su -c reboot", "shutdown": "su -c reboot -p", "sleep": "input keyevent 26"}
+        if action in cmds:
+            self.execute_shell(cmds[action])
+            return f"SUCCESS: Android {action} initiated."
+        return f"ERROR: Action {action} unsupported or requires root."
+
     def get_startup_items(self): return "Execute: ls ~/.termux/boot"
-    def manage_service(self, name, action="status"): return "Execute: sv status " + name
+    def manage_service(self): return "Android services use 'sv' or 'am startservice'."
+    
     def control_network(self, interface, state):
         if shutil.which("termux-wifi-enable"):
             cmd = f"termux-wifi-enable {'true' if state=='up' else 'false'}"
             subprocess.run(cmd, shell=True)
             return f"SUCCESS: WiFi toggled to {state}"
         return "ERROR: termux-api missing"
-    def observe_ui_tree(self): return "Requires ADB or Accessibility Service"
+
+    def observe_ui_tree(self):
+        # Requires ADB/Root
+        res = self.execute_shell("su -c uiautomator dump /sdcard/view.xml && su -c cat /sdcard/view.xml")
+        return res.get("output", "ERROR: XML Dump failed.")
+
     def get_network_stats(self): return psutil.net_io_counters()._asdict()
     def list_dir(self, path="."):
         try: return "\n".join(os.listdir(path))
         except: return "ERROR: Access Denied"
+
     def capture_screen(self):
         if shutil.which("termux-screenshot"):
             subprocess.run("termux-screenshot logs/android_shot.png", shell=True)
             return "SUCCESS: Android screenshot saved to logs/android_shot.png"
         return "ERROR: termux-screenshot missing"
-    def gui_click(self, x, y): return f"ERROR: Click requires Root. Cmd: input tap {x} {y}"
-    def gui_type(self, text): return f"ERROR: Type requires Root. Cmd: input text {text}"
-    def gui_scroll(self, direction): return "ERROR: Scroll requires Root."
+
+    def gui_click(self, x, y):
+        self.execute_shell(f"su -c input tap {x} {y}")
+        return f"SUCCESS: Tapped ({x},{y})"
+
+    def gui_type(self, text):
+        safe = text.replace(" ", "%s") # input text uses %s for space
+        self.execute_shell(f"su -c input text {safe}")
+        return "SUCCESS: Typed"
+
+    def gui_scroll(self, direction):
+        swipe = "500 1000 500 500" if direction == "down" else "500 500 500 1000"
+        self.execute_shell(f"su -c input swipe {swipe}")
+        return f"SUCCESS: Scrolled {direction}"
 
 def get_operator():
     """Factory to return the correct 'Hands' for the current platform."""

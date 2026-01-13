@@ -194,7 +194,7 @@
         function connect() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const host = window.location.hostname || 'localhost';
-            ws = new WebSocket(`${protocol}//${host}:8000/ws/thoughts`);
+            ws = new WebSocket(`${protocol}//${host}:8091/ws/thoughts`);
 
             ws.onopen = () => {
                 statusBox.className = 'flex items-center gap-2 text-[0.6rem] text-emerald-400 font-bold tracking-widest px-4 py-2 glass border-emerald-500/20';

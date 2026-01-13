@@ -92,7 +92,7 @@ async def thought_stream(websocket: WebSocket):
         except:
             pass
 
-def start_server(host="0.0.0.0", port=8000):
+def start_server(host="0.0.0.0", port=8091):
     import uvicorn
     uvicorn.run(app, host=host, port=port)
 

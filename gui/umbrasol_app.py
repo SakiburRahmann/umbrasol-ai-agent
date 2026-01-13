@@ -11,6 +11,7 @@ import psutil
 from threading import Thread
 
 # Add project root to path
+# Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.umbrasol import UmbrasolCore
@@ -27,8 +28,15 @@ BORDER_COLOR = "#334155"   # Slate 700
 
 class UmbrasolApp:
     def __init__(self, page: ft.Page):
+        print("DEBUG: Initializing UmbrasolApp")
         self.page = page
-        self.agent = UmbrasolCore(voice_mode=False)
+        try:
+            print("DEBUG: Initializing Core Agent...")
+            self.agent = UmbrasolCore(voice_mode=False)
+            print("DEBUG: Core Agent Initialized.")
+        except Exception as e:
+            print(f"DEBUG: Error initializing core: {e}")
+            raise e
         
         # Configure page basics
         self.page.title = "Umbrasol Intelligence"
@@ -44,20 +52,25 @@ class UmbrasolApp:
         self.memory_usage = ft.Text("RAM: --%", size=11, color=ACCENT_COLOR, weight="bold")
         self.cpu_usage = ft.Text("CPU: --%", size=11, color=ACCENT_COLOR, weight="bold")
         
+        print("DEBUG: Setting up UI...")
         self.setup_ui()
+        print("DEBUG: UI Setup Complete.")
         
         # Start background stats update
         Thread(target=self.update_stats, daemon=True).start()
+        print("DEBUG: Stats thread started.")
         
     def setup_ui(self):
         """Build the Premium UI"""
+        print("DEBUG: Inside setup_ui - building full interface")
         
         # --- HEADER ---
         header = ft.Container(
             content=ft.Row(
                 [
+                    # Logo / Title
                     ft.Row([
-                        ft.Icon("token", color=ACCENT_COLOR, size=24), # Generic token icon replaces specific abstract ones
+                        ft.Icon("token", color=ACCENT_COLOR, size=24), # Generic token icon
                         ft.Column([
                             ft.Text("UMBRASOL", size=14, weight="bold", color=TEXT_MAIN, letter_spacing=2),
                             ft.Text("NEURAL INTERFACE v12.2", size=10, color=TEXT_MUTED),

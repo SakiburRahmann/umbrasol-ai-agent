@@ -80,7 +80,7 @@ class UmbrasolCore:
                 # We simply re-execute. In a more complex system, we'd use the checkpoint blob.
                 threading.Thread(target=self.execute, args=(task['request'],), kwargs={'task_id': task['id']}).start()
 
-    def execute(self, user_request: str, task_id: str | None = None) -> str | None:
+    def execute(self, user_request: str, task_id: str | None = None, on_token: callable = None) -> str | None:
         start_time = time.time()
         
         # LAYER 0: PERSISTENCE
@@ -107,8 +107,13 @@ class UmbrasolCore:
             self._log_result(result, start_time, task_id, cached['tool'], cached['command'])
             self.habit.learn(active_window, getattr(result, "tool", "cache"))
             if self.voice_mode: self.speak_result(result)
+            
+            # Notify GUI of result
+            if on_token:
+                on_token(f"Executing cached command: {cached['tool']}({cached['command']})\nResult: {str(result)}")
+                
             self.memory.update_task_checkpoint(task_id, "completed", {"stage": "cache_hit"})
-            return
+            return str(result)
 
         # LAYER 4: INSTANT HEURISTICS
         req = user_request.lower().strip()
@@ -122,8 +127,13 @@ class UmbrasolCore:
                 self._log_result(result, start_time, task_id, tool, cmd)
                 self.habit.learn(active_window, f"{tool}:{cmd}")
                 if self.voice_mode: self.speak_result(result)
+                
+                # Notify GUI of result
+                if on_token:
+                    on_token(f"Instant execution: {tool}({cmd})\nResult: {str(result)}")
+
                 self.memory.update_task_checkpoint(task_id, "completed", {"stage": "instant_heuristic"})
-                return
+                return str(result)
 
         # LAYER 5: REAL-TIME BRAIN (STREAMING)
         print(f"[AI] Thinking...")
@@ -139,6 +149,11 @@ class UmbrasolCore:
         for chunk_data in self.soul.execute_task_stream(user_request, context=context_str):
             if chunk_data["type"] == "talk":
                 content = chunk_data["content"]
+                
+                # STREAM TO GUI
+                if on_token:
+                    on_token(content)
+                    
                 full_message += content
                 sentence_buffer += content
                 

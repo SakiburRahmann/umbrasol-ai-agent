@@ -159,16 +159,49 @@ class UmbrasolApp:
         if not text:
             return
         
+        # 1. Add User Message
         self.add_user_message(text)
         self.input_field.value = ""
         self.page.update()
         
+        # 2. Create Placeholder for Agent Message
+        # We add an empty agent message first, then stream content into it
+        agent_msg_container = ft.Container(
+            content=ft.Column([
+                ft.Text("Umbrasol:", size=11, weight="bold", color="#6366f1"),
+                ft.Text("", size=13, color="#e5e7eb"), # Empty initially
+            ], spacing=2),
+            bgcolor="#ffffff0d",
+            padding=10,
+            border_radius=8,
+        )
+        self.chat_list.controls.append(agent_msg_container)
+        self.page.update()
+
+        # The Text control instance we will update
+        response_text_control = agent_msg_container.content.controls[1]
+        
         def process():
             self.add_thinking()
+            current_text = ""
+            
+            def on_token(token):
+                nonlocal current_text
+                current_text += token
+                # Update UI in real-time
+                response_text_control.value = current_text
+                self.page.update()
+
             try:
-                response = self.agent.execute(text)
+                # Execute with streaming callback
+                self.agent.execute(text, on_token=on_token)
                 self.remove_thinking()
-                self.add_agent_message(response if response else "Done.")
+                
+                # If no text was generated (e.g. action only), show confirmation
+                if not current_text:
+                    response_text_control.value = "Task completed."
+                    self.page.update()
+                    
             except Exception as ex:
                 self.remove_thinking()
                 self.add_system_message(f"Error: {str(ex)}")

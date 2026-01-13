@@ -259,7 +259,8 @@ class UmbrasolCore:
                 result = self._safe_dispatch(tool, cmd)
                 res_str = str(result)
                 last_result = result
-                print(f\"[Result]: {res_str[:200]}\")\n               
+                print(f"[Result]: {res_str[:200]}")
+               
                 if "ERROR" not in res_str and "BLOCKED" not in res_str:
                     action_success = True
                     break

@@ -111,26 +111,38 @@ class LinuxHands(BaseHands):
             except Exception as e: self.logger.error(f"Voice Error: {e}")
 
     def stop_speaking(self):
-        \"\"\"Interrupt current speech safely.\"\"\"\n        try:\n            # Clear pending items from queue safely\n            while not self.voice_queue.empty():
-                try:\n                    self.voice_queue.get_nowait()
+        """Interrupt current speech safely."""
+        try:
+            # Clear pending items from queue safely
+            while not self.voice_queue.empty():
+                try:
+                    self.voice_queue.get_nowait()
                     self.voice_queue.task_done()
-                except:\n                    break
+                except:
+                    break
             
             # Terminate current process if running
             if self.current_proc and self.current_proc.poll() is None:
-                try:\n                    # Terminate child processes first\n                    import psutil\n                    parent = psutil.Process(self.current_proc.pid)
+                try:
+                    # Terminate child processes first
+                    import psutil
+                    parent = psutil.Process(self.current_proc.pid)
                     for child in parent.children(recursive=True):
                         child.terminate()
                     parent.terminate()
-                    # Wait briefly for graceful termination\n                    parent.wait(timeout=1)
+                    # Wait briefly for graceful termination
+                    parent.wait(timeout=1)
                 except (psutil.NoSuchProcess, psutil.TimeoutExpired):
-                    # Force kill if graceful termination failed\n                    if self.current_proc.poll() is None:
+                    # Force kill if graceful termination failed
+                    if self.current_proc.poll() is None:
                         self.current_proc.kill()
                 except Exception as e:
-                    self.logger.warning(f\"Error terminating voice process: {e}\")\n            
-            return \"SUCCESS: Vocal interrupted\"
+                    self.logger.warning(f"Error terminating voice process: {e}")
+            
+            return "SUCCESS: Vocal interrupted"
         except Exception as e:
-            self.logger.error(f\"Stop speaking error: {e}\")\n            return f\"ERROR: {e}\"
+            self.logger.error(f"Stop speaking error: {e}")
+            return f"ERROR: {e}"
 
     def gui_speak(self, text):
         if not text or not text.strip(): return "ERROR: Empty text."

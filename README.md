@@ -1,69 +1,119 @@
-# Umbrasol: The Soulled AI Agent (v7.0) 🦁
+# 🌌 Umbrasol: The Chimera AI Agent (v11.0)
 
-**Umbrasol** is a local, autonomous digital operator designed for zero-latency execution, complete privacy, and self-correction. It sees your screen, hears your voice, and predicts your needs.
+> **"The Soul in the Machine."**
 
-![Status](https://img.shields.io/badge/Status-Production_Ready-green)
-![Version](https://img.shields.io/badge/Version-v7.0_Chimera-blue)
-![Architecture](https://img.shields.io/badge/Architecture-Unified_Core-purple)
+![Status](https://img.shields.io/badge/Status-Operational-brightgreen)
+![Version](https://img.shields.io/badge/Version-v11.0_Universal_Soul-blueviolet)
+![Privacy](https://img.shields.io/badge/Privacy-100%25_Local-blue)
+![AI Model](https://img.shields.io/badge/Brain-Qwen_2.5_3B-orange)
 
-## 🚀 Key Capabilities
-| Layer | Feature | Description |
+**Umbrasol** is a fully autonomous, local AI agent designed for Linux integration. Unlike standard chatbots, Umbrasol has **Hands** to execute system commands, **Eyes** to read your screen, and **Ears** to hear you—all processing occurs offline on your machine.
+
+---
+
+## ⚡ Key Capabilities (v11.0 Update)
+
+| Capability | Tech Stack | Description |
 | :--- | :--- | :--- |
-| **0.001s** | **Instant Heuristics** | Executes standard queries (stats, processes, files) instantly. |
-| **Ear** | **Offline Voice** | Hands-free command execution via VOSK (No cloud). |
-| **Eye** | **Visual Context** | Reads the active window title to understand *where* you are working. |
-| **Brain** | **Safe Reasoner** | uses `Qwen2.5/Llama3` for complex planning, with a strict safety whitelist. |
-| **Soul** | **Habit Learning** | Learns your routine (Time + App) to predict commands. |
-| **Life** | **Self-Correction** | If a command fails, it reflects and retries automatically. |
+| **🧠 Intelligence** | **Qwen 2.5 (3B)** | High-complexity reasoning via Ollama. Capable of simultaneous system action + philosophical conversation. |
+| **⚡ Reflex** | **Heuristic Layer** | Instant execution (0.1s) for common tasks (`list files`, `stats`, `battery`). |
+| **🗣️ Speech** | **Piper TTS** | High-quality, natural-sounding offline neural speech synthesis. |
+| **👂 Hearing** | **Vosk** | Fast, accurate offline speech recognition command loop. |
+| **👀 Vision** | **OCR/Scrot** | Reads active window titles and screen text to understand context. |
+| **🖐️ Hands** | **System API** | Controls volume, power, files, networks, and processes safely. |
+| **💾 Memory** | **SQLite** | Remembers user habits and past conversations (Stored locally in `memory/`). |
+
+---
+
+## ⚡ Simultaneous Processing
+Umbrasol v11.0 features a **Dynamic Heuristic Bypass**.
+- **Short Commands** (e.g., "check battery") are executed instantly.
+- **Complex Commands** (e.g., "Check battery and tell me a poem") are routed to the Brain, allowing the agent to perform the system action **AND** engage in natural conversation in a single turn.
+
+---
 
 ## 📦 Installation
 
-**1. Clone the Repository**
+### 1. Prerequisites
+- **Linux** (Ubuntu/Debian recommended)
+- **Ollama** installed and running (`systemctl start ollama`)
+- **Python 3.10+**
+
+### 2. Setup
 ```bash
+# Clone the repository
 git clone https://github.com/SakiburRahmann/umbrasol-ai-agent.git
 cd umbrasol-ai-agent
-```
 
-**2. Install Dependencies**
-```bash
-# Recommended: specific virtual environment
+# Create Environment
 python3 -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
-```
 
-**3. Run Setup (Auto-Download Models)**
-This script will fetch the required AI models (VOSK, etc.) (~50MB) and configure your environment.
-```bash
+# Install Dependencies
+pip install -r requirements.txt
+
+# Download Offline Models (Voice/Ear) ~100MB
 python3 setup.py
 ```
 
+---
+
 ## 🎮 Usage
 
-**Command Line Mode (Single Shot)**
+### ➤ Human-Like Conversation (Voice Mode)
+Talk to Umbrasol hands-free. He will listen to your mic and speak back.
 ```bash
-python main.py "check battery"
-python main.py "what window is open?"
-python main.py "list files in core"
+python3 main.py --voice
 ```
 
-**Hands-Free Voice Mode**
+### ➤ Command Line Interface (Text Mode)
+Execute single tasks or queries effectively.
 ```bash
-python main.py --voice
+# Simple System Check
+python3 main.py "check battery"
+
+# Complex Reasoning + Action
+python3 main.py "Check the CPU temperature and tell me a joke about robots."
+
+# Vision
+python3 main.py "read the text on my screen"
 ```
-*System will listen. Say "check battery" or "who am i".*
-
-## 🏗️ Architecture (Project Chimera)
-The system is built on the **Unified Core** (`core/umbrasol.py`), a single monolith that orchestrates:
-1.  **Senses:** (Ear, Eye, Proprioception)
-2.  **Reflex:** (Semantic Cache, Heuristics)
-3.  **Reason:** (Brain_v2, Habit Manager)
-4.  **Action:** (Universal Hands)
-
-## 🛡️ Safety
-*   **Local Only:** No data leaves your machine.
-*   **Whitelisted:** Destructive commands (`rm`, `sudo`, `dd`) are strictly blocked.
-*   **Transparent:** All actions are logged to the console.
 
 ---
-*Created by Sakibur Rahman. January 2026.*
+
+## 🏗️ System Architecture (The Chimera Core)
+
+The project is structured around the **Monolith Soul** (`core/umbrasol.py`), which orchestrates all subsystems:
+
+```mermaid
+graph TD
+    User[User] -->|Voice/Text| Core[Umbrasol Core]
+    Core -->|Short Input| Heuristic[Reflex Layer]
+    Core -->|Complex Input| Brain[Brain v2 (Qwen)]
+    
+    Heuristic --> Tools[Universal Hands]
+    Brain --> Tools
+    
+    Tools -->|Action| System[OS / Filesystem]
+    Tools -->|Visual| Eye[OCR / Screen]
+    
+    Core -->|Text Output| Console
+    Core -->|Audio Output| Mouth[Piper TTS]
+```
+
+### Module Breakdown
+- **`core/umbrasol.py`**: The central nervous system. Handles routing and lifecycle.
+- **`core/brain_v2.py`**: The bridge to Ollama/Qwen. Handles streaming and context.
+- **`core/tools.py`**: The interface to the OS (shell, gui_click, volume, etc.).
+- **`core/ear.py`**: Microphone input processing.
+- **`core/habit.py`**: Learning mechanism for user preferences.
+
+---
+
+## 🛡️ Safety & Privacy
+- **Destructive Command Block**: Commands like `rm -rf`, `mkfs` are strictly blocked by the Safety Layer.
+- **Simulation Mode**: High-risk commands trigger a simulation phase where the AI predicts the impact before asking confirmation.
+- **Local Data**: No data is sent to the cloud. Your `memory/` database stays on your disk.
+
+---
+*Created by Sakibur Rahman.*

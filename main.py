@@ -15,12 +15,6 @@ def main():
         # Voice Mode
         agent = UmbrasolCore(voice_mode=True)
         agent.listen_loop()
-    elif len(sys.argv) > 1 and sys.argv[1] == "--gui":
-        # Flet GUI Mode
-        print("--- Umbrasol Neural Interface: Launching GUI ---")
-        from gui.umbrasol_app import main
-        import flet as ft
-        ft.app(target=main)
     elif len(sys.argv) > 1:
         # CLI Command Mode (Voice mode False by default)
         agent = UmbrasolCore(voice_mode=False)

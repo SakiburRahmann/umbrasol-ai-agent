@@ -80,7 +80,7 @@ class UmbrasolCore:
                 # We simply re-execute. In a more complex system, we'd use the checkpoint blob.
                 threading.Thread(target=self.execute, args=(task['request'],), kwargs={'task_id': task['id']}).start()
 
-    def execute(self, user_request: str, task_id: str | None = None, on_token: callable = None) -> str | None:
+    def execute(self, user_request: str, task_id: str | None = None) -> str | None:
         start_time = time.time()
         
         # LAYER 0: PERSISTENCE
@@ -150,10 +150,6 @@ class UmbrasolCore:
             if chunk_data["type"] == "talk":
                 content = chunk_data["content"]
                 
-                # STREAM TO GUI
-                if on_token:
-                    on_token(content)
-                    
                 full_message += content
                 sentence_buffer += content
                 

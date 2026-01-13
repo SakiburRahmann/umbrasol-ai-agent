@@ -1,6 +1,0 @@
-requests
-vosk
-sounddevice
-psutil
-numpy
-Pillow

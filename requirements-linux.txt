@@ -1,9 +1,0 @@
-requests
-vosk
-sounddevice
-psutil
-numpy
-piper-tts
-pytesseract
-Pillow
-GPUtil

@@ -45,6 +45,31 @@ class OmegaMemory:
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
+            # 4. SEMANTIC CACHE: Request hash -> command mapping
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS semantic_cache (
+                    hash TEXT PRIMARY KEY,
+                    tool TEXT NOT NULL,
+                    command TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            # 5. HABITS: (TimeSlot, Context) -> frequency
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS habits (
+                    context_key TEXT PRIMARY KEY, -- slot|app
+                    counts TEXT NOT NULL, -- JSON blob of command frequencies
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            # 6. EXPERIENCE: task -> lesson mapping
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS experience (
+                    task_key TEXT PRIMARY KEY,
+                    lesson TEXT NOT NULL, -- JSON blob
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
             conn.commit()
 
     def add_task(self, request):
@@ -96,3 +121,57 @@ class OmegaMemory:
             cursor.execute("SELECT value FROM knowledge WHERE key = ?", (key,))
             res = cursor.fetchone()
             return res[0] if res else None
+
+    # --- UNIFIED MEMORY EXTENSIONS ---
+    
+    def get_cache(self, req_hash):
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute("SELECT tool, command FROM semantic_cache WHERE hash = ?", (req_hash,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def set_cache(self, req_hash, tool, command):
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO semantic_cache (hash, tool, command) 
+                VALUES (?, ?, ?) 
+                ON CONFLICT(hash) DO UPDATE SET tool=excluded.tool, command=excluded.command
+            """, (req_hash, tool, command))
+            conn.commit()
+
+    def get_habit(self, context_key):
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT counts FROM habits WHERE context_key = ?", (context_key,))
+            res = cursor.fetchone()
+            return json.loads(res[0]) if res else {}
+
+    def save_habit(self, context_key, counts):
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO habits (context_key, counts) 
+                VALUES (?, ?) 
+                ON CONFLICT(context_key) DO UPDATE SET counts=excluded.counts, updated_at=CURRENT_TIMESTAMP
+            """, (context_key, json.dumps(counts)))
+            conn.commit()
+
+    def get_experience(self, task_key):
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT lesson FROM experience WHERE task_key = ?", (task_key,))
+            res = cursor.fetchone()
+            return json.loads(res[0]) if res else None
+
+    def save_experience(self, task_key, lesson):
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO experience (task_key, lesson) 
+                VALUES (?, ?) 
+                ON CONFLICT(task_key) DO UPDATE SET lesson=excluded.lesson, updated_at=CURRENT_TIMESTAMP
+            """, (task_key, json.dumps(lesson)))
+            conn.commit()

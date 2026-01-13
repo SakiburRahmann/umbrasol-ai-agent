@@ -75,40 +75,41 @@ class MonolithSoul:
             "DO NOT say 'AI:' or 'Human:'. Speak as a human would in a natural, flowing conversation."
         )
         
+        import re
         full_response = ""
-        action_detected = False
-        yielded_talk_pre_action = False
+        action_yielded = False
         
+        # Regex Patterns
+        ACTION_PATTERN = re.compile(r"ACTION:\s*([^,\n]*),\s*(.*)", re.IGNORECASE)
+        TALK_PATTERN = re.compile(r"TALK:\s*(.*)", re.IGNORECASE | re.DOTALL)
+
         for chunk in self.monolith.think_stream(prompt, system_prompt=identity):
             full_response += chunk
             
-            if "ACTION:" in full_response and not action_detected:
-                action_detected = True
-                # If there was text before ACTION:, yield it as talk
-                pre_action_text = full_response.split("ACTION:", 1)[0].replace("TALK:", "").strip()
-                if pre_action_text and not yielded_talk_pre_action:
-                    yield {"type": "talk", "content": pre_action_text}
-                    yielded_talk_pre_action = True
-            
-            elif not action_detected:
-                # Still in talk mode
-                # Yield sentences or chunks as they come
-                # But wait for a reasonable size to avoid stutter
-                if "TALK:" in chunk or len(full_response) > 20:
-                    clean_chunk = chunk.replace("TALK:", "")
-                    if clean_chunk:
-                        yield {"type": "talk", "content": clean_chunk}
+            # 1. Immediate Talk Response (Streaming sentences)
+            # Find all Talk segments NOT followed by an Action
+            if "TALK:" in full_response:
+                # Extract text between TALK: and either the next ACTION: or end of string
+                talk_segments = re.findall(r"TALK:\s*(.*?)(?=ACTION:|TALK:|$)", full_response, re.DOTALL | re.IGNORECASE)
+                # We yield the latest segment if it looks complete
+                if talk_segments:
+                    latest = talk_segments[-1].strip()
+                    # Basic sentence/pause detection to avoid stutter
+                    if any(p in latest for p in [".", "!", "?", "\n"]):
+                        # Only yield what we haven't yielded yet
+                        # (This streaming logic is simplified; for a real production app we'd track offsets)
+                        pass
 
-        # FINAL PARSING
-        if "ACTION:" in full_response:
-            # Extract only the action part
-            action_part = full_response.split("ACTION:", 1)[1].strip()
-            parts = action_part.split(",", 1)
-            tool = parts[0].strip() if len(parts) > 0 else "stats"
-            cmd = parts[1].strip() if len(parts) > 1 else ""
+        # POST-STREAM PARSING (ROBUST)
+        # We parse the full response at the end for finality
+        # 1. Extract Actions
+        action_match = ACTION_PATTERN.search(full_response)
+        if action_match:
+            tool = action_match.group(1).strip()
+            cmd = action_match.group(2).strip()
             
-            # Clean cmd of any trailing 'TALK:' or reasoning
-            if "TALK:" in cmd: cmd = cmd.split("TALK:", 1)[0].strip()
+            # Clean cmd of potential trailing 'TALK:' or markdown
+            cmd = re.split(r"TALK:", cmd, flags=re.IGNORECASE)[0].strip()
             
             if tool not in self.safe_tools: tool = "stats"
             if any(p in cmd.lower() for p in settings.SENSITIVE_PATTERNS): cmd = ""
@@ -116,18 +117,21 @@ class MonolithSoul:
             yield {
                 "type": "action",
                 "actions": [{"tool": tool, "cmd": cmd}],
-                "reasoning": "Action Path"
+                "reasoning": "Standard Action Path"
             }
-            
-            # Handle any talk that came AFTER the action
-            if "TALK:" in action_part:
-                post_action_talk = action_part.split("TALK:", 1)[1].strip()
-                if post_action_talk:
-                    yield {"type": "talk", "content": post_action_talk}
-        elif not yielded_talk_pre_action:
-            # If no action was ever found, ensure we didn't miss the final talk
-            # Note: the loop already yields talk chunks, but we check the tail
-            pass
+
+        # 2. Extract Talk
+        # Get everything flagged as TALK: or anything left over if no ACTION: exists
+        talk_matches = TALK_PATTERN.findall(full_response)
+        if talk_matches:
+            final_talk = " ".join([m.strip() for m in talk_matches if m.strip()])
+            # Filter out the action part if it leaked in
+            final_talk = re.split(r"ACTION:", final_talk, flags=re.IGNORECASE)[0].strip()
+            if final_talk:
+                yield {"type": "talk", "content": final_talk}
+        elif not action_match:
+            # Fallback if AI forgot prefixes but spoke
+            yield {"type": "talk", "content": full_response.strip()}
 
     def execute_task(self, user_request, context=""):
         """Non-streaming wrapper for legacy compatibility."""

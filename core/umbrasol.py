@@ -195,18 +195,20 @@ class UmbrasolCore:
                 word_count = len(sentence_buffer.split())
                 if any(p in sentence_buffer for p in [".", "!", "?", ",", ";", ":", "\n"]) or word_count > settings.SENTENCE_BUFFER_WORDS:
                     to_speak = sentence_buffer.strip()
-                    if to_speak and self.voice_mode:
+                    if to_speak:
                         print(f"[AI] {to_speak}")
-                        self.hands.gui_speak(to_speak)
+                        if self.voice_mode:
+                            self.hands.gui_speak(to_speak)
                     sentence_buffer = ""
             
             elif chunk_data["type"] == "action":
                 actions.extend(chunk_data.get("actions", []))
 
         # Speak any remaining text in buffer
-        if sentence_buffer.strip() and self.voice_mode:
+        if sentence_buffer.strip():
             print(f"[AI] {sentence_buffer.strip()}")
-            self.hands.gui_speak(sentence_buffer.strip())
+            if self.voice_mode:
+                self.hands.gui_speak(sentence_buffer.strip())
             
         if not actions and not full_message:
             print("[AI] No response generated.")

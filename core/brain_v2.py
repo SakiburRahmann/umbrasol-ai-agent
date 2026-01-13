@@ -62,10 +62,12 @@ class Brain:
             yield f"ERROR: {str(e)}"
 
 class MonolithSoul:
-    def __init__(self):
+    def __init__(self, override_model=None):
+        """Initialize with optional model override for testing."""
         profiler = HardwareProfiler()
         tier = profiler.get_tier()
-        self.model_name = tier['soul']
+        # Allow overriding for testing different models
+        self.model_name = override_model or tier['soul']
         self.monolith = Brain(model_name=self.model_name)
         self.memory = ExperienceManager()
         self.safe_tools = settings.SAFE_TOOLS
@@ -73,26 +75,15 @@ class MonolithSoul:
     def execute_task_stream(self, user_request, context=""):
         """Stream decision and response for real-time interaction."""
         system_name = getattr(settings, "SYSTEM_NAME", "Umbrasol")
-        identity = (
-            f"You are {system_name}, a highly intelligent digital organism created by Sakibur Rahman. "
-            "You possess independent reasoning, logical depth, and a helpful personality. "
-            "You are NOT a scripted bot. You think freely and articulately."
-        )
+        
+        # Simplified identity for faster inference
+        identity = f"You are {system_name}, an intelligent AI assistant. Be helpful and concise."
         
         lesson = self.memory.get_relevant_lesson(user_request)
-        xp_context = f"XP: Previous attempt failed with '{lesson.get('error')}'" if lesson and not lesson.get('success', True) else ""
+        xp_hint = f" [Previous error: {lesson.get('error')}]" if lesson and not lesson.get('success', True) else ""
 
-        prompt = (
-            f"System: {identity}\n"
-            f"Context: {context}\n"
-            f"{xp_context}\n"
-            f"User: {user_request}\n\n"
-            "DIRECTIVE:\n"
-            "1. If the user wants an action (stats, battery, files, window), prefix with 'ACTION: tool,cmd'.\n"
-            "2. For ALL other conversation, speak naturally in full paragraphs. Prefix with 'TALK: '.\n"
-            "CRITICAL: DO NOT use markdown symbols (**, #, _, *). DO NOT use numbered or bulleted lists. "
-            "DO NOT say 'AI:' or 'Human:'. Speak as a human would in a natural, flowing conversation."
-        )
+        # Condensed prompt for speed
+        prompt = f"{context}{xp_hint}\nUser: {user_request}\n\nRules: For actions use 'ACTION: tool,cmd'. For talk use 'TALK: <text>'. Be brief."
         
         import re
         full_response = ""
@@ -104,7 +95,8 @@ class MonolithSoul:
 
         last_yield_pos = 0
         
-        for chunk in self.monolith.think_stream(prompt, system_prompt=identity):
+        # Optimized: lower temp, fewer tokens for speed
+        for chunk in self.monolith.think_stream(prompt, system_prompt=identity, temperature=0.3, max_tokens=100):
             # print(f"DEBUG BRAIN: {chunk}")
             full_response += chunk
             

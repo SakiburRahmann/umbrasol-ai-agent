@@ -57,8 +57,8 @@ class UmbrasolApp:
         print("DEBUG: UI Setup Complete.")
         
         # Start background stats update
-        Thread(target=self.update_stats, daemon=True).start()
-        print("DEBUG: Stats thread started.")
+        # Thread(target=self.update_stats, daemon=True).start()
+        print("DEBUG: Stats thread disabled for stability.")
         
     def setup_ui(self):
         """Build the Premium UI"""
@@ -72,7 +72,7 @@ class UmbrasolApp:
                     ft.Row([
                         ft.Icon("token", color=ACCENT_COLOR, size=24), # Generic token icon
                         ft.Column([
-                            ft.Text("UMBRASOL", size=14, weight="bold", color=TEXT_MAIN, letter_spacing=2),
+                            ft.Text("UMBRASOL", size=14, weight="bold", color=TEXT_MAIN),
                             ft.Text("NEURAL INTERFACE v12.2", size=10, color=TEXT_MUTED),
                         ], spacing=0)
                     ], spacing=12),

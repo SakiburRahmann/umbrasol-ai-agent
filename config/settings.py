@@ -2,7 +2,7 @@ import os
 
 # System Identity
 SYSTEM_NAME = "Umbrasol"
-VERSION = "v7.0 (Chimera)"
+VERSION = "v11.0 (Universal Soul)"
 
 # Paths
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -14,9 +14,17 @@ HABIT_MEMORY_PATH = os.path.join(BASE_DIR, "config", "habit_memory.json")
 DEFAULT_MODEL = "qwen2.5:3b"
 OLLAMA_BASE_URL = "http://localhost:11434"
 
-# Voice Settings (Piper)
+# Voice Settings (Dynamic Selection)
 PIPER_MODEL_DIR = os.path.join(MODELS_DIR, "voice")
-PIPER_VOICE = "en_US-bryce-medium" # High-clarity American Male
+def get_best_voice():
+    # Priority: Bryce (Divine) > Ryan (Standard) > Lessac (Light)
+    voices = ["en_US-bryce-medium", "en_US-ryan-medium", "en_US-lessac-low"]
+    for v in voices:
+        if os.path.exists(os.path.join(PIPER_MODEL_DIR, f"{v}.onnx")):
+            return v
+    return "en_US-ryan-medium" # Default
+
+PIPER_VOICE = get_best_voice()
 PIPER_MODEL_PATH = os.path.join(PIPER_MODEL_DIR, f"{PIPER_VOICE}.onnx")
 
 # Execution Settings

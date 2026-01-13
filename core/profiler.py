@@ -16,7 +16,8 @@ class HardwareProfiler:
             try:
                 with open(self.config_path, 'r') as f:
                     return json.load(f)
-            except: pass
+            except Exception as e:
+                print(f"Profiler Warning: Could not read cache: {e}")
 
         # 2. Perform Hardware Audit
         ram_gb = psutil.virtual_memory().total / (1024**3)
@@ -43,7 +44,7 @@ class HardwareProfiler:
         try:
             result = subprocess.run(['nvidia-smi'], capture_output=True, text=True)
             return result.returncode == 0
-        except:
+        except Exception as e:
             return False
 
 if __name__ == "__main__":

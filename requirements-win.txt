@@ -3,7 +3,8 @@ vosk
 sounddevice
 psutil
 numpy
-piper-tts
+pywin32
+pynput
 pytesseract
 Pillow
 GPUtil

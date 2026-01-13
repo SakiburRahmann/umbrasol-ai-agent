@@ -17,7 +17,9 @@ class HabitManager:
             try:
                 with open(self.habit_path, 'r') as f:
                     return json.load(f)
-            except: return {}
+            except Exception as e:
+                print(f"HabitManager Error: Could not load habits: {e}")
+                return {}
         return {}
 
     def _save(self):
@@ -25,7 +27,8 @@ class HabitManager:
             os.makedirs(os.path.dirname(self.habit_path), exist_ok=True)
             with open(self.habit_path, 'w') as f:
                 json.dump(self.habits, f, indent=4)
-        except: pass
+        except Exception as e:
+            print(f"HabitManager Error: Could not save habits: {e}")
 
     def _get_time_slot(self):
         """Returns: Morning, Afternoon, Evening, Night"""

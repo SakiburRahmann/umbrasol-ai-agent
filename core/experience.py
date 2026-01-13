@@ -12,7 +12,9 @@ class ExperienceManager:
             try:
                 with open(self.memory_path, 'r') as f:
                     return json.load(f)
-            except: return {}
+            except Exception as e:
+                print(f"ExperienceManager Error: {e}")
+                return {}
         return {}
 
     def _save(self):
@@ -20,7 +22,8 @@ class ExperienceManager:
             os.makedirs(os.path.dirname(self.memory_path), exist_ok=True)
             with open(self.memory_path, 'w') as f:
                 json.dump(self.memory, f, indent=4)
-        except: pass
+        except Exception as e:
+            print(f"ExperienceManager Error: {e}")
 
     def save_lesson(self, task, tool, action, error=None):
         """Records a successful pattern or a corrected mistake."""

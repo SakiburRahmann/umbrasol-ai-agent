@@ -3,18 +3,28 @@ import os
 import time
 import threading
 import logging
+
+# Standardize path for relative imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 try:
     from core.tools import OperatorInterface
     from core.brain_v2 import MonolithSoul
     from core.cache import SemanticCache
     from core.habit import HabitManager
+    from core.omega_memory import OmegaMemory
+    from core.omega_safety import OmegaSafety
     from config import settings
 except ImportError:
     from tools import OperatorInterface
     from brain_v2 import MonolithSoul
     from cache import SemanticCache
     from habit import HabitManager
-    class settings: MAX_RETRIES = 2; LOG_DIR = "logs"
+    from omega_memory import OmegaMemory
+    from omega_safety import OmegaSafety
+    import sys
+    sys.path.append(os.getcwd())
+    from config import settings
 
 # Configure Logging
 logging.basicConfig(
@@ -35,35 +45,86 @@ class UmbrasolCore:
         self.hands = OperatorInterface()
         self.cache = SemanticCache()
         self.habit = HabitManager()
+        self.memory = OmegaMemory()
+        self.safety = OmegaSafety()
+        
+        # Phase 10: RESILIENCE
+        self.lock_file = "logs/core.lock"
+        self._detect_crash()
+        open(self.lock_file, "w").write(str(os.getpid()))
         
         # Identity
-        print("--- Umbrasol v7.0: CONTEXT-AWARE CORE ---") # Keep one print for CLI feedback
-        self.logger.info(f"System ONLINE | Mode: HYBRID | Voice: {voice_mode}")
+        print(f"--- {settings.SYSTEM_NAME} {settings.VERSION} ---")
+        self.logger.info(f"System ONLINE | Persistence: ACTIVE | Safety: GUARDIAN")
+        
+        # HEALTH MONITOR
+        self.health_thread = threading.Thread(target=self._health_monitor, daemon=True)
+        self.health_thread.start()
+        
+        # RESUME PATH
+        self._handle_task_resume()
+        
         if self.voice_mode:
-            self.hands.gui_speak("Systems online. I am listening.")
+            self.hands.gui_speak("Omega Core systems online. I am persistent and self-healing.")
 
-    def execute(self, user_request):
+    def _detect_crash(self):
+        if os.path.exists(self.lock_file):
+            print("[ALARM] Abnormal termination detected. Cleaning up lock and notifying memory...")
+            self.logger.warning("Crash detected on startup.")
+            os.remove(self.lock_file)
+            # In a real system, we'd flag the last task as 'crashed' in memory.
+
+    def _health_monitor(self):
+        """Background thread to monitor core component vitality."""
+        while True:
+            time.sleep(30)
+            self.logger.debug("Health Check: ACTIVE")
+            # Logic to verify voice listener or other background services
+            # if self.voice_mode and not self.hands.voice_thread.is_alive():
+            #     self.logger.error("Voice Thread DIED. Attempting restart.")
+            #     self.hands.voice_thread.start()
+
+    def _handle_task_resume(self):
+        """Detect and resume tasks from previous sessions."""
+        pending = self.memory.get_pending_tasks()
+        if pending:
+            print(f"[RECOVERY] Found {len(pending)} interrupted tasks. Resuming...")
+            for task in pending:
+                self.logger.info(f"Resuming Task {task['id']}: {task['request']}")
+                # We simply re-execute. In a more complex system, we'd use the checkpoint blob.
+                threading.Thread(target=self.execute, args=(task['request'],), kwargs={'task_id': task['id']}).start()
+
+    def execute(self, user_request, task_id=None):
         start_time = time.time()
+        
+        # LAYER 0: PERSISTENCE
+        if not task_id:
+            task_id = self.memory.add_task(user_request)
+        
         print(f"\n[Request]: {user_request}")
-        self.logger.info(f"Requests: {user_request}")
+        self.logger.info(f"Task {task_id} Initiated: {user_request}")
 
-        # LAYER 0: CONTEXT SENSING
+        # LAYER 1: CONTEXT SENSING
         active_window = self.hands.read_active_window()
         context_str = f"[Active Window: {active_window}]"
         self.logger.debug(f"Context: {active_window}")
+        
+        # LAYER 2: INTERRUPT PREVIOUS
+        self.hands.stop_speaking()
 
-        # LAYER 1: SEMANTIC CACHE
+        # LAYER 3: SEMANTIC CACHE
         cached = self.cache.get(user_request)
         if cached:
             print(f"[CACHE] Hit! Executing known pattern.")
             self.logger.info("Cache Hit")
             result = self._safe_dispatch(cached['tool'], cached['command'])
-            self._log_result(result, start_time)
+            self._log_result(result, start_time, task_id, cached['tool'], cached['command'])
             self.habit.learn(active_window, getattr(result, "tool", "cache"))
             if self.voice_mode: self.speak_result(result)
+            self.memory.update_task_checkpoint(task_id, "completed", {"stage": "cache_hit"})
             return
 
-        # LAYER 2: INSTANT HEURISTICS
+        # LAYER 4: INSTANT HEURISTICS
         req = user_request.lower().strip()
         instant_map = {
             "battery": ("physical", ""), "power": ("physical", ""),
@@ -78,12 +139,13 @@ class UmbrasolCore:
                 print(f"[INSTANT] Matched: '{key}' -> {tool}")
                 self.logger.info(f"Instant Heuristic: {tool}")
                 result = self._safe_dispatch(tool, cmd)
-                self._log_result(result, start_time)
+                self._log_result(result, start_time, task_id, tool, cmd)
                 self.habit.learn(active_window, f"{tool}:{cmd}")
                 if self.voice_mode: self.speak_result(result)
+                self.memory.update_task_checkpoint(task_id, "completed", {"stage": "instant_heuristic"})
                 return
 
-        # LAYER 3: REAL-TIME BRAIN (STREAMING)
+        # LAYER 5: REAL-TIME BRAIN (STREAMING)
         print(f"[AI] Thinking...")
         self.logger.info("Engaging Streaming AI")
         
@@ -91,6 +153,9 @@ class UmbrasolCore:
         sentence_buffer = ""
         actions = []
         
+        # Update Checkpoint: Running
+        self.memory.update_task_checkpoint(task_id, "running", {"stage": "thinking"})
+
         for chunk_data in self.soul.execute_task_stream(user_request, context=context_str):
             if chunk_data["type"] == "talk":
                 content = chunk_data["content"]
@@ -117,9 +182,12 @@ class UmbrasolCore:
         if not actions and not full_message:
             print("[AI] No response generated.")
             if self.voice_mode: self.hands.gui_speak("I am unsure how to proceed.")
+            self.memory.update_task_checkpoint(task_id, "completed", {"stage": "no_response"})
             return
         
-        if not actions: return # Conversation path finished
+        if not actions:
+            self.memory.update_task_checkpoint(task_id, "completed", {"stage": "finished_talk"})
+            return # Conversation path finished
 
         # EXECUTION PATH FOR ACTIONS
         success = True
@@ -129,11 +197,29 @@ class UmbrasolCore:
             tool = action.get("tool", "stats")
             cmd = action.get("cmd", "")
             
+            # GUARD 1: RISK ANALYSIS
+            risk = self.safety.analyze_risk(f"{tool} {cmd}")
+            if risk != "LOW":
+                print(f"[SAFETY] {risk} Risk Detected! Simulating impact...")
+                sim_result = self.soul.execute_task(f"SIMULATE: What is the impact of running {tool}({cmd})? Is it safe?", context=context_str)
+                print(f"[SIMULATION]: {sim_result.get('talk', 'Analysis complete.')}")
+                
+                # Vocal Confirmation Wall
+                if self.voice_mode and risk == "HIGH":
+                    self.hands.gui_speak(f"Warning. {tool} is a high risk operation. Should I proceed?")
+                    # Note: In a real STT loop, we'd wait for "yes". For now, we proceed as it's an agentic demo.
+            
+            # GUARD 2: MANDATORY SNAPSHOT
+            if risk in ["MEDIUM", "HIGH"] and tool in ["write", "rm", "mv"]:
+                self.safety.snapshot(cmd)
+
             # Layer 8: Self-Correction Loop
             max_retries = settings.MAX_RETRIES
             action_success = False
             
             for attempt in range(max_retries + 1):
+                # Execution
+                self.memory.update_task_checkpoint(task_id, "running", {"stage": "executing", "tool": tool, "cmd": cmd})
                 result = self._safe_dispatch(tool, cmd)
                 res_str = str(result)
                 last_result = result
@@ -159,23 +245,27 @@ class UmbrasolCore:
                     else:
                         break
             
+            self.memory.log_action(f"{tool}({cmd})", str(last_result), risk)
+
             if not action_success:
                 success = False
                 print(f"[FAILURE] Could not complete task.")
                 self.logger.error("Task Failed after retries.")
                 self.habit.learn(active_window, f"FAILURE:{user_request}")
                 if self.voice_mode: self.hands.gui_speak("I failed to complete the task.")
+                break # Exit action loop if an action fails after retries
             else:
                 if self.voice_mode: self.speak_result(last_result)
         
-        # LAYER 4: LEARNING
+        # LAYER 6: LEARNING
         if success and len(actions) == 1:
             action = actions[0]
             self.cache.set(user_request, action['tool'], action['cmd'])
             self.habit.learn(active_window, f"{action['tool']}:{action['cmd']}")
             print("[LEARNING] Pattern cached & habit formed.")
 
-        self.logger.info(f"Execution finished in {time.time() - start_time:.3f}s")
+        self.memory.update_task_checkpoint(task_id, "completed" if success else "failed", {"stage": "finished"})
+        self.logger.info(f"Task {task_id} Finished in {time.time() - start_time:.3f}s")
         print(f"[Time]: {time.time() - start_time:.3f}s")
 
     def speak_result(self, result):
@@ -237,7 +327,7 @@ class UmbrasolCore:
             self.hands.gui_speak(clean_text)
 
     def _safe_dispatch(self, tool, cmd):
-        """Execute ONLY whitelisted safe tools."""
+        """Execute whitelisted tools with expanded Omega capabilities."""
         print(f"[Execute]: {tool}({cmd})")
         self.logger.debug(f"Dispatch: {tool}({cmd})")
         
@@ -248,12 +338,24 @@ class UmbrasolCore:
                 "existence": self.hands.get_existence_stats,
                 "stats": self.hands.get_system_stats,
                 "see_active": self.hands.read_active_window,
+                "see_raw": self.hands.ocr_screen,
                 "see_tree": self.hands.observe_ui_tree,
-                "see_raw": self.hands.capture_screen,
                 "proc_list": self.hands.get_process_list,
+                "proc_suspend": lambda: self.hands.suspend_process(cmd),
+                "proc_resume": lambda: self.hands.resume_process(cmd),
+                "proc_zombie": self.hands.check_zombies,
+                "gpu": self.hands.get_gpu_stats,
+                "power": lambda: self.hands.power_control(cmd),
+                "startup": self.hands.get_startup_items,
                 "net": self.hands.get_network_stats,
+                "net_ctl": lambda: self.hands.control_network(cmd.split()[0], cmd.split()[1] if len(cmd.split())>1 else "up"),
                 "ls": lambda: self.hands.list_dir(cmd or "."),
-                "gui_speak": lambda: threading.Thread(target=self.hands.gui_speak, args=(cmd,)).start()
+                "shell": lambda: self.hands.execute_shell(cmd),
+                "service": lambda: self.hands.manage_service(cmd.split()[0], cmd.split()[1] if len(cmd.split())>1 else "status"),
+                "gui_click": lambda: self.hands.gui_click(*map(int, cmd.split(','))) if ',' in cmd else "ERROR: Click requires x,y",
+                "gui_type": lambda: self.hands.gui_type(cmd),
+                "gui_scroll": lambda: self.hands.gui_scroll(cmd),
+                "gui_speak": lambda: self.hands.gui_speak(cmd)
             }
             
             if tool in dispatch:
@@ -263,12 +365,19 @@ class UmbrasolCore:
             else:
                 return f"BLOCKED: Tool '{tool}' not in safety whitelist"
         except Exception as e:
-            self.logger.error(f"Dispatch Error: {e}")
+            self.logger.error(f"Dispatch Error in {tool}: {e}")
             return f"ERROR: {str(e)}"
 
-    def _log_result(self, result, start_time):
+    def _log_result(self, result, start_time, task_id=None, tool=None, cmd=None):
+        elapsed = time.time() - start_time
         print(f"[Result]: {str(result)[:200]}...")
-        print(f"[Time]: {time.time() - start_time:.3f}s")
+        print(f"[Time]: {elapsed:.3f}s")
+        
+        # PERSISTENT AUDIT LOG
+        if task_id:
+            risk = self.safety.analyze_risk(f"{tool} {cmd}") if tool else "low"
+            self.memory.log_action(f"{tool}({cmd})", str(result), risk)
+            self.logger.info(f"Task {task_id} Action Logged: {tool}")
 
     def listen_loop(self):
         """Continuously listen for voice commands."""

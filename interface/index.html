@@ -99,7 +99,7 @@
     </style>
 </head>
 
-<body class="h-screen flex items-center justify-center p-4 md:p-10 select-none">
+<body class="h-screen flex items-center justify-center p-4 md:p-10">
 
     <div class="w-full max-w-6xl h-full flex flex-col gap-6">
 
@@ -243,7 +243,7 @@
         function createBubble(text, type) {
             const div = document.createElement('div');
             div.className = 'stream-item flex flex-col gap-1';
-            
+
             if (type === 'user') {
                 div.innerHTML = `<span class="text-[10px] font-bold text-zinc-600 uppercase tracking-widest ml-1">You</span>
                                  <p class="text-sm font-medium leading-relaxed">${text}</p>`;
@@ -258,7 +258,7 @@
                 div.innerHTML = `<span class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest ml-1">Umbrasol</span>
                                  <p class="text-sm text-zinc-300 leading-relaxed">${text}</p>`;
             }
-            
+
             dom.stream.appendChild(div);
             lucide.createIcons();
             dom.stream.scrollTop = dom.stream.scrollHeight;
@@ -277,22 +277,22 @@
                 dom.statCpu.innerText = `${data.telemetry.cpu}%`;
                 dom.statRam.innerText = `${data.telemetry.ram}%`;
                 dom.statOs.innerText = data.platform.substring(0, 3);
-            } catch (e) {}
+            } catch (e) { }
             setTimeout(pollStats, 5000);
         }
 
         function transmit() {
             const val = dom.input.value.trim();
             if (!val || !ws || isProcessing) return;
-            
+
             createBubble(val, 'user');
-            ws.send(JSON.stringify({command: val, voice: false}));
+            ws.send(JSON.stringify({ command: val, voice: false }));
             dom.input.value = '';
         }
 
         dom.send.onclick = transmit;
         dom.input.onkeydown = (e) => e.key === 'Enter' && transmit();
-        
+
         // Ensure input stays focused for non-technical users
         window.addEventListener('keydown', (e) => {
             if (document.activeElement !== dom.input && e.key.length === 1) {

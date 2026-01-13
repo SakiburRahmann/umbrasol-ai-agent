@@ -108,32 +108,32 @@ class UmbrasolCore:
             self.habit.learn(active_window, getattr(result, "tool", "cache"))
             if self.voice_mode: self.speak_result(result)
             
-            # Notify GUI of result
-            if on_token:
-                on_token(f"Executing cached command: {cached['tool']}({cached['command']})\nResult: {str(result)}")
+            # Notify GUI of result (Removed)
+            # if on_token:
+            #    on_token(f"Executing cached command: {cached['tool']}({cached['command']})\nResult: {str(result)}")
                 
             self.memory.update_task_checkpoint(task_id, "completed", {"stage": "cache_hit"})
             return str(result)
 
         # LAYER 4: INSTANT HEURISTICS
         req = user_request.lower().strip()
+        word_count = len(req.split())
         instant_map = getattr(settings, "INSTANT_MAP", {})
         
-        for key, (tool, cmd) in instant_map.items():
-            if key in req:
-                print(f"[INSTANT] Matched: '{key}' -> {tool}")
-                self.logger.info(f"Instant Heuristic: {tool}")
-                result = self._safe_dispatch(tool, cmd)
-                self._log_result(result, start_time, task_id, tool, cmd)
-                self.habit.learn(active_window, f"{tool}:{cmd}")
-                if self.voice_mode: self.speak_result(result)
-                
-                # Notify GUI of result
-                if on_token:
-                    on_token(f"Instant execution: {tool}({cmd})\nResult: {str(result)}")
-
-                self.memory.update_task_checkpoint(task_id, "completed", {"stage": "instant_heuristic"})
-                return str(result)
+        # Only use heuristics for short commands (speed optimization)
+        # For complex queries, let the AI decide (intelligence optimization)
+        if word_count < 5:
+            for key, (tool, cmd) in instant_map.items():
+                if key in req:
+                    print(f"[INSTANT] Matched: '{key}' -> {tool}")
+                    self.logger.info(f"Instant Heuristic: {tool}")
+                    result = self._safe_dispatch(tool, cmd)
+                    self._log_result(result, start_time, task_id, tool, cmd)
+                    self.habit.learn(active_window, f"{tool}:{cmd}")
+                    if self.voice_mode: self.speak_result(result)
+                    
+                    self.memory.update_task_checkpoint(task_id, "completed", {"stage": "instant_heuristic"})
+                    return str(result)
 
         # LAYER 5: REAL-TIME BRAIN (STREAMING)
         print(f"[AI] Thinking...")
@@ -178,7 +178,8 @@ class UmbrasolCore:
         
         if not actions:
             self.memory.update_task_checkpoint(task_id, "completed", {"stage": "finished_talk"})
-            return # Conversation path finished
+            # Continue to end to return result
+
 
         # EXECUTION PATH FOR ACTIONS
         success = True
@@ -258,6 +259,8 @@ class UmbrasolCore:
         self.memory.update_task_checkpoint(task_id, "completed" if success else "failed", {"stage": "finished"})
         self.logger.info(f"Task {task_id} Finished in {time.time() - start_time:.3f}s")
         print(f"[Time]: {time.time() - start_time:.3f}s")
+        
+        return full_message if full_message else str(last_result) if last_result else None
 
     def speak_result(self, result):
         """Convert result to natural human speech, stripping machine-isms."""

@@ -2,6 +2,9 @@
 models/
 config/habit_memory.json
 config/*.json
+memory/*.db
+memory/*.lock
+core/*.lock
 
 # Python
 __pycache__/
@@ -15,3 +18,7 @@ venv/
 logs/
 *.log
 today.txt
+demo.py
+loud_conversation.py
+diagnostic.py
+test_regex.py

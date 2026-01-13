@@ -19,7 +19,9 @@ def main():
         # CLI Command Mode (Voice mode False by default)
         agent = UmbrasolCore(voice_mode=False)
         command = " ".join(sys.argv[1:])
-        agent.execute(command)
+        result = agent.execute(command)
+        if result:
+            print(f"\n[Umbrasol]: {result}")
     else:
         # Help / Interactive (Future)
         print("\nUsage:")

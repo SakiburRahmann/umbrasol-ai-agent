@@ -19,19 +19,20 @@ class Brain:
                 "temperature": temperature,
                 "num_predict": max_tokens,
                 "num_thread": 4,
-                "num_ctx": 512
+                "num_ctx": 4096
             }
         }
         
         try:
-            response = requests.post(self.base_url, json=payload, timeout=60, stream=True)
+            response = requests.post(self.base_url, json=payload, timeout=300, stream=True)
             response.raise_for_status()
             
             for line in response.iter_lines():
                 if line:
                     chunk = json.loads(line)
-                    if not chunk.get("done", False):
-                        yield chunk.get("response", "")
+                    if chunk.get("done", False):
+                        break
+                    yield chunk.get("response", "")
         except Exception as e:
             yield f"ERROR: {str(e)}"
 
@@ -76,22 +77,20 @@ class MonolithSoul:
         ACTION_PATTERN = re.compile(r"ACTION:\s*([^,\n]*),\s*(.*)", re.IGNORECASE)
         TALK_PATTERN = re.compile(r"TALK:\s*(.*)", re.IGNORECASE | re.DOTALL)
 
+        last_yield_pos = 0
+        
         for chunk in self.monolith.think_stream(prompt, system_prompt=identity):
+            # print(f"DEBUG BRAIN: {chunk}")
             full_response += chunk
             
-            # 1. Immediate Talk Response (Streaming sentences)
-            # Find all Talk segments NOT followed by an Action
-            if "TALK:" in full_response:
-                # Extract text between TALK: and either the next ACTION: or end of string
-                talk_segments = re.findall(r"TALK:\s*(.*?)(?=ACTION:|TALK:|$)", full_response, re.DOTALL | re.IGNORECASE)
-                # We yield the latest segment if it looks complete
-                if talk_segments:
-                    latest = talk_segments[-1].strip()
-                    # Basic sentence/pause detection to avoid stutter
-                    if any(p in latest for p in [".", "!", "?", "\n"]):
-                        # Only yield what we haven't yielded yet
-                        # (This streaming logic is simplified; for a real production app we'd track offsets)
-                        pass
+            # Simple Streaming (bypass regex for raw speed debug)
+            # Just yield new chars if they look like part of a Talk segment
+            if len(full_response) > last_yield_pos:
+                new_text = full_response[last_yield_pos:]
+                # Stripping styling artifacts if any
+                if "TALK:" not in new_text and "ACTION:" not in new_text:
+                     yield {"type": "talk", "content": new_text}
+                     last_yield_pos = len(full_response)
 
         # POST-STREAM PARSING (ROBUST)
         # We parse the full response at the end for finality

@@ -21,12 +21,12 @@ except ImportError:
 
 # Configure Logging
 if not os.path.exists(settings.LOG_DIR):
-    os.makedirs(settings.LOG_DIR)
+    os.makedirs(settings.LOG_DIR, exist_ok=True)
 
 logging.basicConfig(
     filename=os.path.join(settings.LOG_DIR, "umbrasol.log"),
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
 class BaseHands(abc.ABC):
@@ -111,15 +111,26 @@ class LinuxHands(BaseHands):
             except Exception as e: self.logger.error(f"Voice Error: {e}")
 
     def stop_speaking(self):
-        try:
-            with self.voice_queue.mutex: self.voice_queue.queue.clear()
+        \"\"\"Interrupt current speech safely.\"\"\"\n        try:\n            # Clear pending items from queue safely\n            while not self.voice_queue.empty():
+                try:\n                    self.voice_queue.get_nowait()
+                    self.voice_queue.task_done()
+                except:\n                    break
+            
+            # Terminate current process if running
             if self.current_proc and self.current_proc.poll() is None:
-                subprocess.run(f"pkill -P {self.current_proc.pid}", shell=True, stderr=subprocess.DEVNULL)
-                self.current_proc.terminate()
-            subprocess.run("pkill -9 piper", shell=True, stderr=subprocess.DEVNULL)
-            subprocess.run("pkill -9 aplay", shell=True, stderr=subprocess.DEVNULL)
-            return "SUCCESS: Vocal interrupted"
-        except Exception as e: return f"ERROR: {e}"
+                try:\n                    # Terminate child processes first\n                    import psutil\n                    parent = psutil.Process(self.current_proc.pid)
+                    for child in parent.children(recursive=True):
+                        child.terminate()
+                    parent.terminate()
+                    # Wait briefly for graceful termination\n                    parent.wait(timeout=1)
+                except (psutil.NoSuchProcess, psutil.TimeoutExpired):
+                    # Force kill if graceful termination failed\n                    if self.current_proc.poll() is None:
+                        self.current_proc.kill()
+                except Exception as e:
+                    self.logger.warning(f\"Error terminating voice process: {e}\")\n            
+            return \"SUCCESS: Vocal interrupted\"
+        except Exception as e:
+            self.logger.error(f\"Stop speaking error: {e}\")\n            return f\"ERROR: {e}\"
 
     def gui_speak(self, text):
         if not text or not text.strip(): return "ERROR: Empty text."
@@ -179,6 +190,7 @@ class LinuxHands(BaseHands):
             import pytesseract
             
             screenshot_path = "logs/ocr_temp.png"
+            os.makedirs(os.path.dirname(screenshot_path), exist_ok=True)
             subprocess.run(f"scrot -o {screenshot_path}", shell=True)
             
             text = pytesseract.image_to_string(Image.open(screenshot_path))
@@ -273,6 +285,7 @@ class LinuxHands(BaseHands):
         try:
             timestamp = int(psutil.time.time())
             filename = f"logs/screenshot_{timestamp}.png"
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
             subprocess.run(f"import -window root {filename}", shell=True)
             return f"SUCCESS: Screenshot saved to {filename}"
         except Exception as e: return f"ERROR: {e}"

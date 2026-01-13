@@ -1,7 +1,7 @@
 import subprocess
 import os
 import sys
-from profiler import HardwareProfiler
+from core.profiler import HardwareProfiler
 
 class SoulFetcher:
     """Layer 0: Soul Provisioning. Fetches the correct model weights for the device."""

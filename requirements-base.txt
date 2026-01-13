@@ -1,0 +1,17 @@
+# Umbrasol Base Requirements (Cross-Platform)
+# Install with: pip install -r requirements-base.txt
+
+# Core Dependencies
+psutil>=5.9.0
+requests>=2.28.0
+numpy>=1.24.0
+Pillow>=10.0.0
+
+# AI & Voice (Cross-Platform)
+vosk>=0.3.45
+sounddevice>=0.4.6
+
+# Note: Platform-specific requirements are in separate files:
+# - requirements-linux.txt
+# - requirements-windows.txt  
+# - requirements-android.txt

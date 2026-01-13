@@ -3,6 +3,9 @@ import os
 import time
 import threading
 import logging
+import atexit
+import signal
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from core.tools import OperatorInterface
 from core.brain_v2 import MonolithSoul
@@ -34,10 +37,25 @@ class UmbrasolCore:
         self.memory = OmegaMemory()
         self.safety = OmegaSafety()
         
+        # Ensure directories exist
+        os.makedirs(settings.LOG_DIR, exist_ok=True)
+        
+        # Task execution thread pool (limits concurrent tasks)
+        self.executor = ThreadPoolExecutor(
+            max_workers=settings.MAX_CONCURRENT_TASKS, 
+            thread_name_prefix="Umbrasol-Task"
+        )
+        
         # Phase 10: RESILIENCE
-        self.lock_file = "logs/core.lock"
+        self.lock_file = os.path.join(settings.LOG_DIR, "core.lock")
         self._detect_crash()
-        open(self.lock_file, "w").write(str(os.getpid()))
+        with open(self.lock_file, "w") as f:
+            f.write(str(os.getpid()))
+        
+        # Register cleanup handlers
+        atexit.register(self._cleanup)
+        signal.signal(signal.SIGTERM, self._signal_handler)
+        signal.signal(signal.SIGINT, self._signal_handler)
         
         # Identity
         print(f"--- {settings.SYSTEM_NAME} {settings.VERSION} ---")
@@ -53,32 +71,56 @@ class UmbrasolCore:
         if self.voice_mode:
             self.hands.gui_speak("Omega Core systems online. I am persistent and self-healing.")
 
+    def _cleanup(self):
+        """Clean shutdown handler."""
+        try:
+            # Shutdown thread pool
+            if hasattr(self, 'executor'):
+                self.executor.shutdown(wait=True, cancel_futures=False)
+            
+            # Remove lock file
+            if hasattr(self, 'lock_file') and os.path.exists(self.lock_file):
+                os.remove(self.lock_file)
+            self.logger.info("Clean shutdown completed")
+        except Exception as e:
+            self.logger.error(f"Error during cleanup: {e}")
+    
+    def _signal_handler(self, signum, frame):
+        """Handle termination signals gracefully."""
+        self.logger.info(f"Received signal {signum}, shutting down...")
+        self._cleanup()
+        sys.exit(0)
+    
     def _detect_crash(self):
+        """Check if previous session crashed."""
         if os.path.exists(self.lock_file):
             print("[ALARM] Abnormal termination detected. Cleaning up lock and notifying memory...")
             self.logger.warning("Crash detected on startup.")
             os.remove(self.lock_file)
-            # In a real system, we'd flag the last task as 'crashed' in memory.
 
     def _health_monitor(self):
         """Background thread to monitor core component vitality."""
         while True:
-            time.sleep(30)
+            time.sleep(settings.HEALTH_CHECK_INTERVAL)
             self.logger.debug("Health Check: ACTIVE")
-            # Logic to verify voice listener or other background services
-            # if self.voice_mode and not self.hands.voice_thread.is_alive():
-            #     self.logger.error("Voice Thread DIED. Attempting restart.")
-            #     self.hands.voice_thread.start()
+            # Future: Add voice thread liveness checks here
 
     def _handle_task_resume(self):
         """Detect and resume tasks from previous sessions."""
         pending = self.memory.get_pending_tasks()
         if pending:
-            print(f"[RECOVERY] Found {len(pending)} interrupted tasks. Resuming...")
+            # Limit resumed tasks to prevent overwhelming the system
+            max_resume = min(len(pending), settings.MAX_TASK_RESUME)
+            if len(pending) > max_resume:
+                print(f"[RECOVERY] Found {len(pending)} interrupted tasks. Resuming {max_resume} most recent...")
+                pending = pending[:max_resume]
+            else:
+                print(f"[RECOVERY] Found {len(pending)} interrupted tasks. Resuming...")
+            
             for task in pending:
                 self.logger.info(f"Resuming Task {task['id']}: {task['request']}")
-                # We simply re-execute. In a more complex system, we'd use the checkpoint blob.
-                threading.Thread(target=self.execute, args=(task['request'],), kwargs={'task_id': task['id']}).start()
+                # Submit to thread pool instead of creating unbounded threads
+                self.executor.submit(self.execute, task['request'], task_id=task['id'])
 
     def execute(self, user_request: str, task_id: str | None = None) -> str | None:
         start_time = time.time()
@@ -108,10 +150,6 @@ class UmbrasolCore:
             self.habit.learn(active_window, getattr(result, "tool", "cache"))
             if self.voice_mode: self.speak_result(result)
             
-            # Notify GUI of result (Removed)
-            # if on_token:
-            #    on_token(f"Executing cached command: {cached['tool']}({cached['command']})\nResult: {str(result)}")
-                
             self.memory.update_task_checkpoint(task_id, "completed", {"stage": "cache_hit"})
             return str(result)
 
@@ -122,7 +160,7 @@ class UmbrasolCore:
         
         # Only use heuristics for short commands (speed optimization)
         # For complex queries, let the AI decide (intelligence optimization)
-        if word_count < 5:
+        if word_count < settings.HEURISTIC_WORD_THRESHOLD:
             for key, (tool, cmd) in instant_map.items():
                 if key in req:
                     print(f"[INSTANT] Matched: '{key}' -> {tool}")
@@ -153,9 +191,9 @@ class UmbrasolCore:
                 full_message += content
                 sentence_buffer += content
                 
-                # If we have a natural pause or 8 words, speak it instantly
+                # If we have a natural pause or threshold words, speak it instantly
                 word_count = len(sentence_buffer.split())
-                if any(p in sentence_buffer for p in [".", "!", "?", ",", ";", ":", "\n"]) or word_count > 8:
+                if any(p in sentence_buffer for p in [".", "!", "?", ",", ";", ":", "\n"]) or word_count > settings.SENTENCE_BUFFER_WORDS:
                     to_speak = sentence_buffer.strip()
                     if to_speak and self.voice_mode:
                         print(f"[AI] {to_speak}")
@@ -205,36 +243,62 @@ class UmbrasolCore:
             if risk in ["MEDIUM", "HIGH"] and tool in ["write", "rm", "mv"]:
                 self.safety.snapshot(cmd)
 
-            # Layer 8: Self-Correction Loop
+            # Layer 8: Self-Correction Loop with Safety Guards
             max_retries = settings.MAX_RETRIES
             action_success = False
+            retry_history = []  # Track retry attempts to prevent loops
             
             for attempt in range(max_retries + 1):
                 # Execution
-                self.memory.update_task_checkpoint(task_id, "running", {"stage": "executing", "tool": tool, "cmd": cmd})
+                self.memory.update_task_checkpoint(task_id, "running", {
+                    "stage": "executing", 
+                    "tool": tool, 
+                    "cmd": cmd,
+                    "attempt": attempt
+                })
                 result = self._safe_dispatch(tool, cmd)
                 res_str = str(result)
                 last_result = result
-                print(f"[Result]: {res_str[:200]}")
-                
+                print(f\"[Result]: {res_str[:200]}\")\n               
                 if "ERROR" not in res_str and "BLOCKED" not in res_str:
                     action_success = True
                     break
                 
                 if attempt < max_retries:
-                    print(f"[AUTO-FIX] Action failed. Reflexion initiated...")
+                    print(f"[AUTO-FIX] Action failed (attempt {attempt + 1}/{max_retries + 1}). Reflexion initiated...")
                     self.logger.warning(f"Action failed: {tool}({cmd}). Retrying...")
-                    error_context = f"Previous action {tool}({cmd}) failed: {result}. Suggest a fix."
                     
+                    # Exponential backoff
+                    backoff_time = 2 ** attempt  # 1s, 2s, 4s
+                    time.sleep(backoff_time)
+                    
+                    error_context = f"Previous action {tool}({cmd}) failed: {result}. Suggest a fix."
                     retry_thought = self.soul.execute_task(user_request, context=context_str + "\n" + error_context)
                     retry_actions = retry_thought.get("actions", [])
                     
                     if retry_actions:
                         new_action = retry_actions[0]
-                        tool = new_action.get("tool", tool)
-                        cmd = new_action.get("cmd", cmd)
+                        new_tool = new_action.get("tool", tool)
+                        new_cmd = new_action.get("cmd", cmd)
+                        
+                        # Circuit Breaker: Detect identical retries
+                        retry_signature = f"{new_tool}:{new_cmd}"
+                        if retry_signature in retry_history:
+                            print(f"[CIRCUIT BREAKER] Detected identical retry. Aborting to prevent loop.")
+                            self.logger.error(f"Circuit breaker triggered: identical retry {retry_signature}")
+                            break
+                        
+                        # Validate retry is different from original
+                        if new_tool == tool and new_cmd == cmd:
+                            print(f"[WARNING] AI suggested identical command. Breaking retry loop.")
+                            break
+                        
+                        retry_history.append(retry_signature)
+                        tool = new_tool
+                        cmd = new_cmd
                         print(f"[AUTO-FIX] Retrying with: {tool}({cmd})")
                     else:
+                        print(f"[AUTO-FIX] No alternative suggested. Aborting retries.")
                         break
             
             self.memory.log_action(f"{tool}({cmd})", str(last_result), risk)

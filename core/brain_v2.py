@@ -3,14 +3,15 @@ import json
 from core.profiler import HardwareProfiler
 from core.experience import ExperienceManager
 from config import settings
+import os
 
 class Brain:
     def __init__(self, model_name="qwen2.5:3b", base_url="http://localhost:11434"):
         self.model_name = model_name
         self.base_url = f"{base_url}/api/generate"
 
-    def think_stream(self, prompt, system_prompt="", temperature=0.7, max_tokens=150):
-        """Streaming inference for real-time response."""
+    def think_stream(self, prompt, system_prompt="", temperature=0.7, max_tokens=150, timeout=60):
+        """Streaming inference for real-time response with timeout protection."""
         payload = {
             "model": self.model_name,
             "prompt": f"{system_prompt}\n{prompt}",
@@ -18,21 +19,45 @@ class Brain:
             "options": {
                 "temperature": temperature,
                 "num_predict": max_tokens,
-                "num_thread": 4,
+                "num_thread": os.cpu_count() or 4,  # Use CPU count, fallback to 4
                 "num_ctx": 4096
             }
         }
         
         try:
-            response = requests.post(self.base_url, json=payload, timeout=300, stream=True)
+            response = requests.post(self.base_url, json=payload, timeout=timeout, stream=True)
             response.raise_for_status()
             
+            import time
+            start_time = time.time()
+            last_chunk_time = start_time
+            chunk_timeout = 30  # Max time between chunks
+            
             for line in response.iter_lines():
+                current_time = time.time()
+                
+                # Check for overall timeout
+                if current_time - start_time > timeout:
+                    yield f"ERROR: Streaming timeout after {timeout}s"
+                    break
+                
+                # Check for chunk timeout (no data received)
+                if current_time - last_chunk_time > chunk_timeout:
+                    yield f"ERROR: No data received for {chunk_timeout}s"
+                    break
+                
                 if line:
+                    last_chunk_time = current_time
                     chunk = json.loads(line)
                     if chunk.get("done", False):
                         break
                     yield chunk.get("response", "")
+        except requests.exceptions.Timeout:
+            yield f"ERROR: Connection timeout to Ollama"
+        except requests.exceptions.ConnectionError:
+            yield f"ERROR: Cannot connect to Ollama. Is it running?"
+        except requests.exceptions.RequestException as e:
+            yield f"ERROR: Request failed: {str(e)}"
         except Exception as e:
             yield f"ERROR: {str(e)}"
 

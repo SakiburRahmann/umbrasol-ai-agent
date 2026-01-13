@@ -1,0 +1,16 @@
+# Umbrasol Android/Termux Requirements
+# Install with: pip install -r requirements-android.txt
+
+# Minimal dependencies for mobile/low-resource devices
+psutil>=5.9.0
+requests>=2.28.0
+
+# Audio (if available)
+vosk>=0.3.45
+sounddevice>=0.4.6
+
+# Note: Termux packages required (install via pkg):
+# pkg install -y python tesseract termux-api
+# 
+# Optional for better performance:
+# pkg install -y clang cmake

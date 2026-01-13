@@ -1,3 +1,6 @@
+# Umbrasol System Constants
+# Centralized configuration constants
+
 import os
 
 # System Identity
@@ -22,19 +25,50 @@ def get_best_voice():
     for v in voices:
         if os.path.exists(os.path.join(PIPER_MODEL_DIR, f"{v}.onnx")):
             return v
-    return "en_US-ryan-medium" # Default
+    # Raise error if no voices found (fail fast)
+    raise FileNotFoundError(
+        f"No Piper voice models found in {PIPER_MODEL_DIR}. "
+        "Please run setup.py to download voice models."
+    )
 
-PIPER_VOICE = get_best_voice()
-PIPER_MODEL_PATH = os.path.join(PIPER_MODEL_DIR, f"{PIPER_VOICE}.onnx")
+try:
+    PIPER_VOICE = get_best_voice()
+    PIPER_MODEL_PATH = os.path.join(PIPER_MODEL_DIR, f"{PIPER_VOICE}.onnx")
+except FileNotFoundError as e:
+    # Allow import but warn user
+    print(f"WARNING: {e}")
+    PIPER_VOICE = None
+    PIPER_MODEL_PATH = None
 
 # Execution Settings
 MAX_RETRIES = 2
 EXECUTION_TIMEOUT = 60
+MAX_CONCURRENT_TASKS = 4  # ThreadPoolExecutor worker count
+MAX_TASK_RESUME = 10  # Max tasks to resume after crash
 
-# Safety
+# Performance Tuning
+HEURISTIC_WORD_THRESHOLD = 5  # Only use heuristics for short commands (< 5 words)
+SENTENCE_BUFFER_WORDS = 8  # Speak after accumulating 8 words in streaming
+HEALTH_CHECK_INTERVAL = 30  # Seconds between health monitor checks
+
+# Safety Patterns (Regex-based for robust detection)
 SENSITIVE_PATTERNS = [
-    "rm ", "mv ", ">", "chmod", "chown", "sudo", 
-    "apt ", "pip install", "python -m pip", "wget", "curl", "kill "
+    r"\brm\s+",           # rm with any whitespace
+    r"\bmv\s+",           # mv with any whitespace  
+    r">+",                # output redirection
+    r"\bchmod\b",         # chmod (any usage)
+    r"\bchown\b",         # chown (any usage)
+    r"\bsudo\b",          # sudo (any usage)
+    r"\bapt\s+",          # apt package manager
+    r"\bpip\s+install",   # pip install
+    r"\bwget\b",          # wget downloads
+    r"\bcurl\b.*-o",      # curl with output
+    r"\bkill\s+",         # kill process
+    r"\$\(",              # command substitution $(...)
+    r"`",                 # backtick command substitution
+    r"\bdd\b",            # dangerous disk operations
+    r"\bmkfs\b",          # filesystem creation
+    r">\s*/dev/",         # writing to device files
 ]
 
 # Heuristic Mapping (0.00ms Instant Commands)

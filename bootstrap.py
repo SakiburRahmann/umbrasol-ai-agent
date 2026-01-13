@@ -50,9 +50,13 @@ def main():
     # 1. Install Dependencies
     print(f"\nInstalling {edition} dependencies...")
     try:
-        subprocess.run([sys.executable, "-m", "pip", "install", "-r", req_file, "--break-system-packages"], check=True)
+        if os.path.exists(req_file):
+            subprocess.run([sys.executable, "-m", "pip", "install", "-r", req_file], check=True)
+        else:
+            print(f"Warning: {req_file} not found. Installing base requirements...")
+            subprocess.run([sys.executable, "-m", "pip", "install", "-r", "requirements-base.txt"], check=True)
     except Exception as e:
-        print(f"Warning: Dependency installation encountered an issue (likely non-dist-packages): {e}")
+        print(f"Warning: Dependency installation encountered an issue: {e}")
 
     # 3. Update Settings
     print(f"\nConfiguring {settings.SYSTEM_NAME} identity...")

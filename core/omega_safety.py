@@ -2,6 +2,7 @@ import os
 import shutil
 import logging
 import subprocess
+import re
 
 class OmegaSafety:
     def __init__(self, backup_dir=".umbrasol/backups"):
@@ -10,15 +11,34 @@ class OmegaSafety:
         self.logger = logging.getLogger("Umbrasol.Safety")
 
     def analyze_risk(self, command):
-        """Assigns a risk level to a command."""
-        high_risk = ["rm -rf", "reboot", "shutdown", "format", "mkfs", "> /dev/"]
-        med_risk = ["rm ", "mv ", "systemctl stop", "kill ", "apt remove", "pip uninstall"]
+        """Assigns a risk level to a command using regex patterns."""
+        high_risk = [
+            r"\brm\s+-rf",        # rm -rf specifically
+            r"\breboot\b",        # reboot
+            r"\bshutdown\b",      # shutdown
+            r"\bformat\b",        # format
+            r"\bmkfs\b",          # make filesystem
+            r">\s*/dev/",         # write to device
+            r"\bdd\b.*of=",       # dd with output file
+        ]
+        med_risk = [
+            r"\brm\s+",           # any rm command
+            r"\bmv\s+",           # any mv command
+            r"\bsystemctl\s+stop", # stopping services
+            r"\bkill\s+-9",       # force kill
+            r"\bapt\s+remove",    # package removal
+            r"\bpip\s+uninstall", # pip uninstall
+            r"\$\(",              # command substitution
+            r"`",                 # backtick substitution
+        ]
         
-        cmd_lower = command.lower()
-        if any(trigger in cmd_lower for trigger in high_risk):
-            return "HIGH"
-        if any(trigger in cmd_lower for trigger in med_risk):
-            return "MEDIUM"
+        # Check against patterns
+        for pattern in high_risk:
+            if re.search(pattern, command, re.IGNORECASE):
+                return "HIGH"
+        for pattern in med_risk:
+            if re.search(pattern, command, re.IGNORECASE):
+                return "MEDIUM"
         return "LOW"
 
     def snapshot(self, path):

@@ -1,11 +1,18 @@
-GPUtil
-numpy
-Pillow
-piper-tts
-psutil
-pynput
-pytesseract
-pywin32
-requests
-sounddevice
-vosk
+# Umbrasol AI Agent - Requirements
+# 
+# IMPORTANT: This project requires platform-specific installation.
+# Please use the appropriate requirements file for your system:
+#
+# For Linux:
+#   pip install -r requirements-linux.txt
+#
+# For Windows:
+#   pip install -r requirements-windows.txt
+#
+# For Android/Termux:
+#   pip install -r requirements-android.txt
+#
+# These files will automatically include requirements-base.txt
+#
+# For automated setup, run:
+#   python3 bootstrap.py

@@ -1,0 +1,14 @@
+# Umbrasol Windows-Specific Requirements
+# Install with: pip install -r requirements-base.txt -r requirements-windows.txt
+
+-r requirements-base.txt
+
+# Windows System Integration
+pywin32>=305
+pynput>=1.7.6
+pytesseract>=0.3.10
+
+# Note: Additional software required:
+# 1. Tesseract OCR: https://github.com/UB-Mannheim/tesseract/wiki
+# 2. Add tesseract to PATH
+# 3. Piper TTS: https://github.com/rhasspy/piper/releases

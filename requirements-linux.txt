@@ -1,0 +1,14 @@
+# Umbrasol Linux-Specific Requirements
+# Install with: pip install -r requirements-base.txt -r requirements-linux.txt
+
+-r requirements-base.txt
+
+# Linux GUI Automation
+pynput>=1.7.6
+pytesseract>=0.3.10
+
+# Note: System packages required (install via apt):
+# sudo apt-get install -y tesseract-ocr scrot xdotool x11-utils portaudio19-dev
+# 
+# For Piper TTS, download manually from:
+# https://github.com/rhasspy/piper/releases

@@ -1,33 +1,35 @@
 import sys
 import os
+import asyncio
 
 # Ensure we can import from core
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-try:
-    from core.umbrasol import UmbrasolCore
-except ImportError as e:
-    print(f"CRITICAL ERROR: Could not import Umbrasol Core. {e}")
-    sys.exit(1)
+from core.umbrasol import UmbrasolCore
 
-def main():
-    if len(sys.argv) > 1 and sys.argv[1] == "--voice":
-        # Voice Mode
-        agent = UmbrasolCore(voice_mode=True)
-        agent.listen_loop()
+async def main():
+    voice_mode = "--voice" in sys.argv
+    agent = UmbrasolCore(voice_mode=voice_mode)
+    await agent.initialize()
+    
+    if voice_mode:
+        await agent.listen_loop()
     elif len(sys.argv) > 1:
-        # CLI Command Mode (Voice mode False by default)
-        agent = UmbrasolCore(voice_mode=False)
-        command = " ".join(sys.argv[1:])
-        result = agent.execute(command)
-        if result:
-            print(f"\n[Umbrasol]: {result}")
+        # Reconstruct command excluding flags
+        command = " ".join([arg for arg in sys.argv[1:] if not arg.startswith("--")])
+        if command:
+            result = await agent.execute(command)
+            if result:
+                print(f"\n[Umbrasol]: {result}")
+        else:
+            print("No command provided. Use Umbrasol with --voice or 'your command'.")
     else:
-        # Help / Interactive (Future)
         print("\nUsage:")
         print("  python main.py --voice         # Hands-free mode")
         print("  python main.py \"command\"       # Single execution")
-        print("  python main.py check battery   # Example")
 
 if __name__ == "__main__":
-    main()
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        pass

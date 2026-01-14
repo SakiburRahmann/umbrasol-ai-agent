@@ -5,7 +5,7 @@ import os
 
 # System Identity
 SYSTEM_NAME = "Umbrasol"
-VERSION = "v12.0 (The Renaissance Soul)"
+VERSION = "v12.1.2 (The Precise Researcher)"
 
 # Paths
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

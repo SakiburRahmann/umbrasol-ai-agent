@@ -8,12 +8,12 @@ class SemanticCache:
     def _hash(self, text):
         return hashlib.md5(text.lower().strip().encode()).hexdigest()
 
-    def get(self, user_request):
+    async def get(self, user_request):
         """Returns the command if it exists in cache."""
         req_hash = self._hash(user_request)
-        return self.memory.get_cache(req_hash)
+        return await self.memory.get_cache(req_hash)
 
-    def set(self, user_request, tool, command):
+    async def set(self, user_request, tool, command):
         """Stores a successful command mapping."""
         req_hash = self._hash(user_request)
-        self.memory.set_cache(req_hash, tool, command)
+        await self.memory.set_cache(req_hash, tool, command)

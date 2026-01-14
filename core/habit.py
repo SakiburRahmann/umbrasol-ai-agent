@@ -19,7 +19,7 @@ class HabitManager:
         elif 17 <= h < 22: return "Evening"
         else: return "Night"
 
-    def learn(self, active_window, command):
+    async def learn(self, active_window, command):
         """Records a habit: When [Time] in [App] -> User did [Command]."""
         slot = self._get_time_slot()
         app_name = "Unknown"
@@ -28,13 +28,13 @@ class HabitManager:
              app_name = parts[-1].strip() if len(parts) > 1 else str(active_window)[:20]
         
         context_key = f"{slot}|{app_name}"
-        habits = self.memory.get_habit(context_key)
+        habits = await self.memory.get_habit(context_key)
         
         cmd_key = str(command)
         habits[cmd_key] = habits.get(cmd_key, 0) + 1
-        self.memory.save_habit(context_key, habits)
+        await self.memory.save_habit(context_key, habits)
 
-    def predict(self, active_window, threshold=3):
+    async def predict(self, active_window, threshold=3):
         """Returns a likely command if confidence > threshold."""
         slot = self._get_time_slot()
         app_name = "Unknown"
@@ -43,7 +43,7 @@ class HabitManager:
              app_name = parts[-1].strip() if len(parts) > 1 else str(active_window)[:20]
 
         context_key = f"{slot}|{app_name}"
-        habits = self.memory.get_habit(context_key)
+        habits = await self.memory.get_habit(context_key)
         
         if habits:
             best_cmd = max(habits, key=habits.get)

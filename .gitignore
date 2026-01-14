@@ -4,7 +4,9 @@ config/habit_memory.json
 config/*.json
 memory/*.db
 memory/*.lock
+memory/cache/
 core/*.lock
+core/cache/
 
 # Python
 __pycache__/

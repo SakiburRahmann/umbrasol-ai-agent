@@ -14,6 +14,7 @@ from core.habit import HabitManager
 from core.omega_memory import OmegaMemory
 from core.omega_safety import OmegaSafety
 from core.internet import Internet
+import re
 from config import settings
 
 # Configure Logging
@@ -152,9 +153,12 @@ class UmbrasolCore:
         full_message = ""
         actions = []
         
+        print(f"[AI] ", end="", flush=True)
         async for chunk_data in self.soul.execute_task_stream(user_request, context=context_str):
             if chunk_data["type"] == "talk":
                 content = chunk_data["content"]
+                # Filter out raw SAY: or THINK: leftovers if they slip through
+                content = re.sub(r"^(SAY|THINK|ACT):?\s*", "", content, flags=re.IGNORECASE)
                 full_message += content
                 sys.stdout.write(content)
                 sys.stdout.flush()
@@ -162,12 +166,18 @@ class UmbrasolCore:
                     await self._safe_dispatch("gui_speak", content.strip())
             
             elif chunk_data["type"] == "reasoning":
-                content = chunk_data["content"]
+                content = chunk_data["content"].strip()
                 if content:
-                    print(f"\n[Thinking]: {content.strip()}")
+                    if "[Thinking]:" not in full_message:
+                        sys.stdout.write(f"\n[Thinking]: ")
+                        full_message += "[Thinking]: "
+                    sys.stdout.write(f"{content} ")
+                    sys.stdout.flush()
             
             elif chunk_data["type"] == "action":
                 actions.extend(chunk_data.get("actions", []))
+        print("\n") # End the AI response line
+
 
         # EXECUTION PATH
         success = True
@@ -205,6 +215,17 @@ class UmbrasolCore:
             if not action_success:
                 success = False
                 break
+        
+        # SYNTHESIS PASS: If tools were used, inform the AI of the result to provide a final summary
+        if actions and success:
+            print(f"[AI] Synthesizing results...")
+            async for chunk_data in self.soul.synthesis_stream(user_request, last_result):
+                if chunk_data["type"] == "talk":
+                    content = chunk_data["content"]
+                    full_message += content
+                    sys.stdout.write(content)
+                    sys.stdout.flush()
+
         
         # Patterns & Learning
         if success and len(actions) == 1:
